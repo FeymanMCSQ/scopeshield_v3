@@ -1,7 +1,9 @@
 {
   "name": "@scopeshield/domain",
   "private": true,
+  "main": "dist/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "echo domain build placeholder"
+    "build": "tsc -p tsconfig.json"
   }
 }
