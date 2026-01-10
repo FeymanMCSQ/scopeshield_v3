@@ -1,0 +1,7 @@
+{
+  "name": "@scopeshield/domain",
+  "private": true,
+  "scripts": {
+    "build": "echo domain build placeholder"
+  }
+}

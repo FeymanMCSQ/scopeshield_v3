@@ -1,0 +1,8 @@
+{
+  "name": "web",
+  "private": true,
+  "scripts": {
+    "build": "echo web build placeholder",
+    "dev": "echo web dev placeholder"
+  }
+}

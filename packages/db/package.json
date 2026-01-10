@@ -1,0 +1,7 @@
+{
+  "name": "@scopeshield/db",
+  "private": true,
+  "scripts": {
+    "build": "echo db build placeholder"
+  }
+}
