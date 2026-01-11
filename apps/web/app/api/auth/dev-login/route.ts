@@ -29,13 +29,16 @@ export async function POST() {
         expiresAt: session.expiresAt,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const stack = error instanceof Error ? error.stack : undefined;
+
     console.error('Dev Login Error:', error);
     return NextResponse.json(
       {
         ok: false,
-        error: error.message,
-        stack: error.stack,
+        error: message,
+        stack: stack,
       },
       { status: 500 }
     );
