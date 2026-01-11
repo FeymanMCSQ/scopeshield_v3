@@ -44,3 +44,13 @@ export { Prisma }
  * 
  */
 export type SanityCheck = Prisma.SanityCheckModel
+/**
+ * Model User
+ * 
+ */
+export type User = Prisma.UserModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel

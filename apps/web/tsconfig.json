@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@scopeshield/db": ["../../packages/db/src/index"]
     }
   },
   "include": [
