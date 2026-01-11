@@ -7,8 +7,15 @@
     "dev": "turbo run dev"
   },
   "devDependencies": {
+    "@types/node": "^25.0.6",
     "prisma": "^7.2.0",
+    "tsx": "^4.21.0",
     "turbo": "^2.7.3",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.2.0",
+    "@prisma/extension-accelerate": "^3.0.1",
+    "dotenv": "^17.2.3"
   }
 }
