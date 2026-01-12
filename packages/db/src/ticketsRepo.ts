@@ -89,3 +89,39 @@ function mapTicket(t: any): tickets.CreatedTicket {
     updatedAt: t.updatedAt,
   };
 }
+
+export type PublicTicketView = {
+  id: string;
+  status: string;
+  priceCents: number | null;
+  currency: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export async function getPublicTicketById(
+  ticketId: string
+): Promise<PublicTicketView | null> {
+  const t = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      id: true,
+      status: true,
+      priceCents: true,
+      currency: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!t) return null;
+
+  return {
+    id: t.id,
+    status: t.status,
+    priceCents: t.priceCents,
+    currency: t.currency,
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+  };
+}

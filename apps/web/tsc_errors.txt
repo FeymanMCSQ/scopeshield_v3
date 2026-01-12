@@ -1,6 +1,6 @@
-.next/dev/types/validator.ts(126,31): error TS2344: Type 'typeof import("C:/Users/Sibghat Ullah/Desktop/WebDev/scopeshield_v3/apps/web/app/api/tickets/[ticketId]/approve/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/tickets/[ticketId]/approve">'.
-  Types of property 'POST' are incompatible.
-    Type '(_req: Request, { params }: { params: { ticketId: string; }; }) => Promise<NextResponse<{ ok: boolean; error: string; }> | NextResponse<{ ok: boolean; ticket: CreatedTicket; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ ticketId: string; }>; }) => void | Response | Promise<void | Response>'.
+.next/dev/types/validator.ts(126,31): error TS2344: Type 'typeof import("C:/Users/Sibghat Ullah/Desktop/WebDev/scopeshield_v3/apps/web/app/api/public/tickets/[ticketId]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/public/tickets/[ticketId]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { ticketId: string; }; }) => Promise<NextResponse<{ ok: boolean; error: string; }> | NextResponse<{ ok: boolean; ticket: PublicTicketView; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ ticketId: string; }>; }) => void | Response | Promise<void | Response>'.
       Types of parameters '__1' and 'context' are incompatible.
         Type '{ params: Promise<{ ticketId: string; }>; }' is not assignable to type '{ params: { ticketId: string; }; }'.
           Types of property 'params' are incompatible.
