@@ -23,6 +23,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   sessions  Session[]
+  tickets   Ticket[]
 }
 
 model Session {
@@ -39,4 +40,39 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum TicketStatus {
+  pending   // created, not yet reviewed/approved
+  approved  // client agreed to price/scope
+  paid      // payment confirmed (Stripe truth later)
+  rejected  // declined / not proceeding
+}
+
+model Ticket {
+  id        String       @id @default(uuid())
+  status    TicketStatus @default(pending)
+
+  // Pricing
+  priceCents Int?        // set when freelancer proposes/approves pricing
+  currency   String      @default("USD")
+
+  // Evidence (what was captured)
+  platform     String    // e.g. "whatsapp", "slack", "email"
+  evidenceText String
+  evidenceAt   DateTime  // when the message/request happened (client-side timestamp)
+  evidenceUrl  String?   // optional deep link / message URL / thread link
+
+  // Optional attachments (later)
+  assetUrl   String?     // uploaded screenshot/image reference (later)
+
+  // Ownership + routing (added now for future sanity)
+  ownerUserId String
+  owner       User       @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerUserId, createdAt])
+  @@index([status, createdAt])
 }

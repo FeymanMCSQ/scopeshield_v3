@@ -9,7 +9,6 @@ build/
 
 # Prisma
 packages/db/prisma/generated/
-packages/db/prisma/migrations/
 
 # Env
 .env

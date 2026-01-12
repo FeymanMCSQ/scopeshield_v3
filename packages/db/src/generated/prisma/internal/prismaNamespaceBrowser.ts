@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   SanityCheck: 'SanityCheck',
   User: 'User',
-  Session: 'Session'
+  Session: 'Session',
+  Ticket: 'Ticket'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -102,6 +103,24 @@ export const SessionScalarFieldEnum = {
 } as const
 
 export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  priceCents: 'priceCents',
+  currency: 'currency',
+  platform: 'platform',
+  evidenceText: 'evidenceText',
+  evidenceAt: 'evidenceAt',
+  evidenceUrl: 'evidenceUrl',
+  assetUrl: 'assetUrl',
+  ownerUserId: 'ownerUserId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
 
 
 export const SortOrder = {
