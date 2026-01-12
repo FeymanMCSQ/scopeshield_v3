@@ -87,3 +87,114 @@ export function reject(ticket: Ticket): Ticket {
 export function markPaid(ticket: Ticket): Ticket {
   return transitionTicket(ticket, 'paid');
 }
+
+//////////////////////////////// TICKET CREATION /////////////////////////////////////////
+
+export type EvidenceInput = {
+  platform: string; // "whatsapp" | "slack" | ...
+  text: string; // captured request text
+  evidenceAt: Date; // when it happened (client-side timestamp)
+  evidenceUrl?: string; // deep link optional
+  assetUrl?: string; // screenshot/image optional
+};
+
+export type CreateTicketInput = {
+  ownerUserId: string;
+  evidence: EvidenceInput;
+  // Pricing is optional at creation time
+  pricing?: {
+    priceCents?: number;
+    currency?: string; // default "USD"
+  };
+};
+
+export type CreatedTicket = {
+  id: string;
+  status: TicketStatus;
+  ownerUserId: string;
+
+  priceCents: number | null;
+  currency: string;
+
+  platform: string;
+  evidenceText: string;
+  evidenceAt: Date;
+  evidenceUrl: string | null;
+  assetUrl: string | null;
+
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+/**
+ * The only DB capability the domain needs for ticket creation.
+ * Implemented in packages/db. Domain does not know Prisma exists.
+ */
+export interface TicketWriter {
+  createTicket(data: {
+    ownerUserId: string;
+    status: TicketStatus;
+
+    priceCents: number | null;
+    currency: string;
+
+    platform: string;
+    evidenceText: string;
+    evidenceAt: Date;
+    evidenceUrl: string | null;
+    assetUrl: string | null;
+  }): Promise<CreatedTicket>;
+}
+
+function assertNonEmpty(s: string, name: string) {
+  if (!s || !s.trim()) throw new Error(`${name} is required`);
+}
+
+export async function createTicketFromEvidence(
+  repo: TicketWriter,
+  input: CreateTicketInput
+): Promise<CreatedTicket> {
+  if (!repo) throw new Error('repo is required');
+  assertNonEmpty(input.ownerUserId, 'ownerUserId');
+
+  const { evidence } = input;
+  if (!evidence) throw new Error('evidence is required');
+  assertNonEmpty(evidence.platform, 'evidence.platform');
+  assertNonEmpty(evidence.text, 'evidence.text');
+  if (
+    !(evidence.evidenceAt instanceof Date) ||
+    isNaN(evidence.evidenceAt.getTime())
+  ) {
+    throw new Error('evidence.evidenceAt must be a valid Date');
+  }
+
+  const currency = (input.pricing?.currency ?? 'USD').trim().toUpperCase();
+  const priceCents =
+    typeof input.pricing?.priceCents === 'number'
+      ? input.pricing!.priceCents
+      : null;
+
+  if (
+    priceCents !== null &&
+    (!Number.isInteger(priceCents) || priceCents < 0)
+  ) {
+    throw new Error(
+      'pricing.priceCents must be a non-negative integer (or omitted)'
+    );
+  }
+
+  // Always start pending. (State machine governs later transitions.)
+  return repo.createTicket({
+    ownerUserId: input.ownerUserId,
+    status: 'pending',
+
+    priceCents,
+    currency,
+
+    platform: evidence.platform.trim(),
+    evidenceText: evidence.text.trim(),
+    evidenceAt: evidence.evidenceAt,
+    evidenceUrl: evidence.evidenceUrl?.trim() ?? null,
+    assetUrl: evidence.assetUrl?.trim() ?? null,
+  });
+}

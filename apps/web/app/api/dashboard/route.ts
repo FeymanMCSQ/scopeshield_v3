@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@scopeshield/db';
-import { requireSession } from '@/lib/authGaurd';
+import { requireSession } from '@/lib/authGuard';
 
 export const runtime = 'nodejs';
 

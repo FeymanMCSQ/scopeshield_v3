@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@scopeshield/db": ["../../packages/db/src/index"]
+      "@scopeshield/db": ["../../packages/db/src/index"],
+      "@scopeshield/domain": ["../../packages/domain/src/index"]
     }
   },
   "include": [

@@ -7,7 +7,10 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "baseUrl": ".",
+    "paths": {
+      "@scopeshield/domain": ["../domain/src/index"]
+    }
   },
   "include": ["src"]
 }
