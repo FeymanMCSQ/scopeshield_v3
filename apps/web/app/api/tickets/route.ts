@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/authGuard';
 import { tickets } from '@scopeshield/domain';
-import { ticketWriter } from '@scopeshield/db';
+import { ticketRepo } from '@scopeshield/db';
 
 export const runtime = 'nodejs';
 
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const s = await requireSession();
     const body = await req.json();
 
-    const ticket = await tickets.createTicketFromEvidence(ticketWriter, {
+    const ticket = await tickets.createTicketFromEvidence(ticketRepo, {
       ownerUserId: s.userId,
       evidence: {
         platform: body.platform,

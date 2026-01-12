@@ -198,3 +198,31 @@ export async function createTicketFromEvidence(
     assetUrl: evidence.assetUrl?.trim() ?? null,
   });
 }
+
+export interface TicketReader {
+  getTicketById(id: string): Promise<CreatedTicket | null>;
+}
+
+export interface TicketUpdater {
+  updateTicketStatus(id: string, status: TicketStatus): Promise<CreatedTicket>;
+}
+
+/**
+ * Approve a ticket. Allowed only from:
+ * - pending -> approved
+ */
+export async function approveTicket(
+  repo: TicketReader & TicketUpdater,
+  ticketId: string
+): Promise<CreatedTicket> {
+  if (!repo) throw new Error('repo is required');
+  if (!ticketId || !ticketId.trim()) throw new Error('ticketId is required');
+
+  const existing = await repo.getTicketById(ticketId);
+  if (!existing) throw new Error('Ticket not found');
+
+  // Use the state machine (throws if illegal)
+  const next = approve({ id: existing.id, status: existing.status });
+
+  return repo.updateTicketStatus(existing.id, next.status);
+}
