@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "ScopeShield v3",
+  "version": "0.0.1",
+  "description": "Capture scope creep evidence without storing tokens.",
+  "permissions": [],
+  "host_permissions": ["https://web.whatsapp.com/*", "https://*.slack.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*", "https://*.slack.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
