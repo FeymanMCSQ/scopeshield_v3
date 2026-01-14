@@ -42,7 +42,7 @@
   });
 
   document.addEventListener('mousedown', (e) => {
-    if (overlayRoot.contains(e.target)) return;
+    if (e.composedPath().includes(overlayRoot)) return;
     setTimeout(() => {
       const sel = window.getSelection();
       if (
@@ -72,7 +72,30 @@
     SS.selection.tryHighlightSelection(sel);
 
     const evidence = SS.buildEvidence({ sel, selectedText, platform });
-    console.log(`${SS.TAG} SHIELD_THIS_REQUEST`, evidence);
+
+    // Map to what your API expects (keep it strict)
+    const payload = {
+      platform: evidence.platform,
+      text: evidence.text,
+      evidenceAt: new Date().toISOString(), // safe fallback; you can improve later
+      evidenceUrl: evidence.evidenceUrl,
+    };
+
+    chrome.runtime.sendMessage({ type: 'SS_CREATE_TICKET', payload }, (resp) => {
+      if (chrome.runtime.lastError) {
+        console.log(`${SS.TAG} API error`, chrome.runtime.lastError.message);
+        return;
+      }
+
+      if (!resp?.ok) {
+        console.log(`${SS.TAG} create failed`, resp);
+        return;
+      }
+
+      console.log(`${SS.TAG} ticket created`, resp);
+      // Open share url in a new tab
+      window.open(resp.shareUrl, '_blank', 'noopener,noreferrer');
+    });
   });
 
   console.log(`${SS.TAG} boot ok`, { platform, href: location.href });

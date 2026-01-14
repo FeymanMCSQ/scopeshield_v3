@@ -4,7 +4,15 @@
   "version": "0.0.1",
   "description": "Capture scope creep evidence without storing tokens.",
   "permissions": [],
-  "host_permissions": ["https://web.whatsapp.com/*", "https://*.slack.com/*"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://*.slack.com/*",
+
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "src/sw.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://web.whatsapp.com/*", "https://*.slack.com/*"],

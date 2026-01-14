@@ -1,8 +1,29 @@
 (() => {
   const SS = (globalThis.ScopeShield = globalThis.ScopeShield || {});
 
+  let shadow = null;
+
+  function ensureShadow() {
+    if (shadow) return shadow;
+    let host = document.getElementById('scopeshield-host');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'scopeshield-host';
+      host.style.cssText =
+        'position: fixed; top: 0; left: 0; pointer-events: none; z-index: 2147483647;';
+      document.documentElement.appendChild(host);
+    }
+    if (!host.shadowRoot) {
+      shadow = host.attachShadow({ mode: 'open' });
+    } else {
+      shadow = host.shadowRoot;
+    }
+    return shadow;
+  }
+
   function injectStyles() {
-    if (document.getElementById('scopeshield-style')) return;
+    const s = ensureShadow();
+    if (s.querySelector('#scopeshield-style')) return;
     const style = document.createElement('style');
     style.id = 'scopeshield-style';
     style.textContent = `
@@ -21,12 +42,12 @@
         color: white;
         box-shadow: 0 6px 22px rgba(0,0,0,0.25);
         cursor: pointer;
+        pointer-events: auto;
       }
       #scopeshield-badge {
         position: fixed;
         bottom: 16px;
         right: 16px;
-        z-index: 2147483647;
         padding: 8px 10px;
         border-radius: 10px;
         font-size: 12px;
@@ -34,31 +55,30 @@
         background: rgba(0,0,0,0.75);
         color: white;
         box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        pointer-events: auto;
       }
       #scopeshield-overlay-root {
         position: fixed;
         left: 0; top: 0;
-        z-index: 2147483647;
         display: none;
         pointer-events: none;
       }
-      #scopeshield-overlay-root > * {
-        pointer-events: auto;
-      }
     `;
-    document.documentElement.appendChild(style);
+    s.appendChild(style);
   }
 
   function ensureBadge() {
-    if (document.getElementById('scopeshield-badge')) return;
+    const s = ensureShadow();
+    if (s.getElementById('scopeshield-badge')) return;
     const badge = document.createElement('div');
     badge.id = 'scopeshield-badge';
     badge.textContent = 'ScopeShield ON';
-    document.documentElement.appendChild(badge);
+    s.appendChild(badge);
   }
 
   function createOverlay() {
-    const existing = document.getElementById('scopeshield-overlay-root');
+    const s = ensureShadow();
+    const existing = s.getElementById('scopeshield-overlay-root');
     if (existing) return existing;
 
     const root = document.createElement('div');
@@ -70,7 +90,7 @@
     btn.textContent = '🛡 Shield This Request';
 
     root.appendChild(btn);
-    document.documentElement.appendChild(root);
+    s.appendChild(root);
     return root;
   }
 
