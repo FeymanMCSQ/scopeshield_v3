@@ -88,6 +88,15 @@ export function markPaid(ticket: Ticket): Ticket {
   return transitionTicket(ticket, 'paid');
 }
 
+/**
+ * Idempotent version of markPaid: if already paid, returns as-is.
+ * Otherwise attempts transition.
+ */
+export function markPaidIdempotent(ticket: Ticket): Ticket {
+  if (ticket.status === 'paid') return ticket;
+  return markPaid(ticket);
+}
+
 //////////////////////////////// TICKET CREATION /////////////////////////////////////////
 
 export type EvidenceInput = {
