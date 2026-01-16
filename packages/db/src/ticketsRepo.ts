@@ -1,5 +1,8 @@
 import { prisma } from './client';
 import { tickets } from '@scopeshield/domain';
+import type { TicketStatus } from './generated/prisma/enums';
+
+console.log('DEBUG [ticketsRepo.ts]: Module initialized');
 
 /**
  * Shared selection object to ensure consistency across all ticket queries.
@@ -124,4 +127,94 @@ export async function getPublicTicketById(
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
   };
+}
+
+
+export type TicketListItemDto = {
+  id: string;
+  status: TicketStatus;
+  priceCents: number | null;
+  currency: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type TicketCursor = { createdAt: string; id: string };
+
+function encodeCursor(c: TicketCursor): string {
+  return Buffer.from(JSON.stringify(c), 'utf8').toString('base64url');
+}
+
+function decodeCursor(s: string): TicketCursor {
+  const raw = Buffer.from(s, 'base64url').toString('utf8');
+  const parsed = JSON.parse(raw) as TicketCursor;
+  if (!parsed?.createdAt || !parsed?.id) throw new Error('BAD_CURSOR');
+  return parsed;
+}
+
+export async function listTicketsForOwner(opts: {
+  ownerUserId: string;
+  limit: number; // 1..100
+  cursor?: string; // opaque base64url json
+  status?: TicketStatus;
+}): Promise<{ items: TicketListItemDto[]; nextCursor: string | null }> {
+  const take = Math.min(Math.max(opts.limit, 1), 100) + 1;
+
+  // We use a composite cursor of (createdAt, id) to guarantee stable ordering.
+  // Prisma requires cursor to reference a unique field. `id` is unique; we use it
+  // as the cursor anchor and enforce orderBy createdAt/id for stable paging.
+  // To page correctly, we also filter by createdAt boundary ourselves.
+  let boundary: TicketCursor | null = null;
+  if (opts.cursor) boundary = decodeCursor(opts.cursor);
+
+  const whereBase: any = {
+    ownerUserId: opts.ownerUserId,
+    ...(opts.status ? { status: opts.status } : {}),
+  };
+
+  // When cursor is present, exclude items >= boundary in the ordering (createdAt desc, id desc).
+  // For descending order, "next page" means strictly older than the boundary.
+  const where =
+    boundary == null
+      ? whereBase
+      : {
+          ...whereBase,
+          OR: [
+            { createdAt: { lt: new Date(boundary.createdAt) } },
+            {
+              createdAt: { equals: new Date(boundary.createdAt) },
+              id: { lt: boundary.id },
+            },
+          ],
+        };
+
+  const rows = await prisma.ticket.findMany({
+    where,
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take,
+    select: {
+      id: true,
+      status: true,
+      priceCents: true,
+      currency: true,
+      createdAt: true,
+      updatedAt: true,
+      // DO NOT SELECT: platform/evidenceText/evidenceUrl/ownerUserId
+    },
+  });
+
+  const hasMore = rows.length > take - 1;
+  const items = (
+    hasMore ? rows.slice(0, take - 1) : rows
+  ) satisfies TicketListItemDto[];
+
+  const nextCursor =
+    hasMore && items.length
+      ? encodeCursor({
+          createdAt: items[items.length - 1].createdAt.toISOString(),
+          id: items[items.length - 1].id,
+        })
+      : null;
+
+  return { items, nextCursor };
 }

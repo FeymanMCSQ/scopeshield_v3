@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/authGuard';
 import { tickets } from '@scopeshield/domain';
-import { ticketRepo } from '@scopeshield/db';
+import { ticketRepo, listTicketsForOwner } from '@scopeshield/db';
+
+console.log('DEBUG [route.ts]: Imports from @scopeshield/db:', { 
+  ticketRepo: !!ticketRepo, 
+  listTicketsForOwner: typeof listTicketsForOwner 
+});
 
 export const runtime = 'nodejs';
 
 function getOrigin(req: Request) {
-  const proto = req.headers.get("x-forwarded-proto") ?? "http";
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  const proto = req.headers.get('x-forwarded-proto') ?? 'http';
+  const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host');
   if (!host) return null;
   return `${proto}://${host}`;
 }
@@ -38,9 +43,55 @@ export async function POST(req: Request) {
     const status = (e as { status?: number })?.status === 401 ? 401 : 400;
     const message = e instanceof Error ? e.message : 'BAD_REQUEST';
 
+    return NextResponse.json({ ok: false, error: message }, { status });
+  }
+}
+
+
+function parseLimit(v: string | null): number {
+  if (!v) return 20;
+  const n = Number(v);
+  if (!Number.isFinite(n) || !Number.isInteger(n)) throw new Error('BAD_LIMIT');
+  if (n < 1 || n > 100) throw new Error('BAD_LIMIT');
+  return n;
+}
+
+export async function GET(req: Request) {
+  try {
+    const s = await requireSession();
+
+    const url = new URL(req.url);
+    const limit = parseLimit(url.searchParams.get('limit'));
+    const cursor = url.searchParams.get('cursor') ?? undefined;
+    const status = url.searchParams.get('status') ?? undefined;
+
+    // Optional status filter, but keep it strict.
+    const allowed = new Set(['pending', 'approved', 'paid', 'rejected']);
+    if (status && !allowed.has(status)) {
+      return NextResponse.json(
+        { ok: false, error: 'BAD_STATUS' },
+        { status: 400 }
+      );
+    }
+
+    const { items, nextCursor } = await listTicketsForOwner({
+      ownerUserId: s.userId,
+      limit,
+      cursor,
+      status: status as tickets.TicketStatus,
+    });
+
     return NextResponse.json(
-      { ok: false, error: message },
-      { status }
+      {
+        ok: true,
+        items,
+        nextCursor,
+      },
+      { status: 200 }
     );
+  } catch (e: unknown) {
+    const status = (e as { status?: number })?.status === 401 ? 401 : 400;
+    const message = e instanceof Error ? e.message : 'UNKNOWN_ERROR';
+    return NextResponse.json({ ok: false, error: message }, { status });
   }
 }
