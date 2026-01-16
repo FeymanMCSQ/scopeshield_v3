@@ -3,11 +3,6 @@ import { requireSession } from '@/lib/authGuard';
 import { tickets } from '@scopeshield/domain';
 import { ticketRepo, listTicketsForOwner } from '@scopeshield/db';
 
-console.log('DEBUG [route.ts]: Imports from @scopeshield/db:', { 
-  ticketRepo: !!ticketRepo, 
-  listTicketsForOwner: typeof listTicketsForOwner 
-});
-
 export const runtime = 'nodejs';
 
 function getOrigin(req: Request) {

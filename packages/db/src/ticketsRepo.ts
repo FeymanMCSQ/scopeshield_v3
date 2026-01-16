@@ -2,8 +2,6 @@ import { prisma } from './client';
 import { tickets } from '@scopeshield/domain';
 import type { TicketStatus } from './generated/prisma/enums';
 
-console.log('DEBUG [ticketsRepo.ts]: Module initialized');
-
 /**
  * Shared selection object to ensure consistency across all ticket queries.
  */
