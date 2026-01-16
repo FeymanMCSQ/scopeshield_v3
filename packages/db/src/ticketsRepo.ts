@@ -127,7 +127,6 @@ export async function getPublicTicketById(
   };
 }
 
-
 export type TicketListItemDto = {
   id: string;
   status: TicketStatus;
@@ -215,4 +214,46 @@ export async function listTicketsForOwner(opts: {
       : null;
 
   return { items, nextCursor };
+}
+
+export type RevenueMetrics = {
+  paidCount: number;
+  totalPaidCents: number;
+  currency: string; // best-effort if single currency; otherwise "MIXED"
+};
+
+export async function getRecapturedRevenueMetrics(opts: {
+  ownerUserId: string;
+}): Promise<RevenueMetrics> {
+  // Count paid tickets
+  const paidCount = await prisma.ticket.count({
+    where: { ownerUserId: opts.ownerUserId, status: 'paid' as TicketStatus },
+  });
+
+  // Sum priceCents for paid tickets (nulls ignored by SUM; Prisma returns null when no rows)
+  const sum = await prisma.ticket.aggregate({
+    where: { ownerUserId: opts.ownerUserId, status: 'paid' as TicketStatus },
+    _sum: { priceCents: true },
+  });
+
+  const totalPaidCents = sum._sum.priceCents ?? 0;
+
+  // Currency handling:
+  // If you enforce a single currency per user later, this can be simplified.
+  // For now, compute "USD if all paid tickets are USD else MIXED".
+  const currencies = await prisma.ticket.findMany({
+    where: { ownerUserId: opts.ownerUserId, status: 'paid' as TicketStatus },
+    select: { currency: true },
+    distinct: ['currency'],
+    take: 2,
+  });
+
+  const currency =
+    currencies.length === 0
+      ? 'USD'
+      : currencies.length === 1
+      ? currencies[0].currency
+      : 'MIXED';
+
+  return { paidCount, totalPaidCents, currency };
 }

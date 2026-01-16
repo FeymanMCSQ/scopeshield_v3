@@ -4,7 +4,7 @@ import { requireSession } from '@/lib/authGuard';
 import { tickets } from '@scopeshield/domain';
 
 // Adjust import path to match your workspace exports:
-import { listTicketsForOwner } from '@scopeshield/db';
+import { listTicketsForOwner, getRecapturedRevenueMetrics } from '@scopeshield/db';
 
 type SearchParams = {
   cursor?: string;
@@ -52,6 +52,11 @@ function fmtDate(d: Date) {
   }).format(new Date(d));
 }
 
+function fmtMoneyCents(cents: number, currency: string) {
+  if (currency === 'MIXED') return `${(cents / 100).toFixed(2)} (mixed currencies)`;
+  return `${currency.toUpperCase()} ${(cents / 100).toFixed(2)}`;
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -65,12 +70,17 @@ export default async function DashboardPage({
   const status = normalizeStatus(sp.status);
   const cursor = sp.cursor;
 
-  const { items, nextCursor } = await listTicketsForOwner({
-    ownerUserId: session.userId,
-    limit,
-    cursor: cursor || undefined,
-    status: status === 'all' ? undefined : (status as tickets.TicketStatus),
-  });
+  const [ticketData, revenue] = await Promise.all([
+    listTicketsForOwner({
+      ownerUserId: session.userId,
+      limit,
+      cursor: cursor || undefined,
+      status: status === 'all' ? undefined : (status as tickets.TicketStatus),
+    }),
+    getRecapturedRevenueMetrics({ ownerUserId: session.userId }),
+  ]);
+
+  const { items, nextCursor } = ticketData;
 
   // Build query helper
   const baseQuery = (overrides: Partial<SearchParams> = {}) => {
@@ -93,6 +103,27 @@ export default async function DashboardPage({
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
         Dashboard
       </h1>
+
+      <section
+        style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}
+      >
+        <div
+          style={{
+            border: '1px solid #e5e5e5',
+            borderRadius: 12,
+            padding: 12,
+            minWidth: 220,
+          }}
+        >
+          <div style={{ fontSize: 12, opacity: 0.7 }}>Recaptured revenue</div>
+          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4 }}>
+            {fmtMoneyCents(revenue.totalPaidCents, revenue.currency)}
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
+            Paid tickets: {revenue.paidCount}
+          </div>
+        </div>
+      </section>
 
       <section
         style={{
