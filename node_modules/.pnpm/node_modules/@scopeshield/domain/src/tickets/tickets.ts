@@ -1,4 +1,15 @@
-export type TicketStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+export const TICKET_STATUSES = [
+  'pending',
+  'approved',
+  'paid',
+  'rejected',
+] as const;
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+
+export function isTicketStatus(x: string): x is TicketStatus {
+  return (TICKET_STATUSES as readonly string[]).includes(x);
+}
+
 
 export type Ticket = {
   id: string;

@@ -36,7 +36,7 @@ The entry point for the workspace package. It re-exports everything from `client
 ✅ **Standard Import** (Everywhere else):
 
 ```ts
-import { prisma, ticketWriter } from '@scopeshield/db';
+import { ticketRepo } from '@scopeshield/db';
 ```
 
 ---

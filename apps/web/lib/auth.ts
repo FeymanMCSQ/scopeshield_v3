@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
-import { prisma } from '@scopeshield/db';
+import { sessionRepo } from '@scopeshield/db';
+
 
 const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'ss_session';
 const TTL_DAYS = Number(process.env.SESSION_TTL_DAYS ?? '30');
@@ -46,18 +47,12 @@ export async function createSession(userId: string): Promise<AuthSession> {
   const tokenHash = hashToken(token);
   const expiresAt = addDays(now(), TTL_DAYS);
 
-  const session = await prisma.session.create({
-    data: {
-      userId,
-      tokenHash,
-      expiresAt,
-    },
-    select: {
-      id: true,
-      userId: true,
-      expiresAt: true,
-    },
+  const session = await sessionRepo.createSession({
+    userId,
+    tokenHash,
+    expiresAt,
   });
+
 
   // HTTP-only cookie: JS cannot read it. Extension also doesn't store tokens.
   const cookieStore = await cookies();
@@ -92,15 +87,8 @@ export async function validateSession(): Promise<{
 
   const tokenHash = hashToken(token);
 
-  const session = await prisma.session.findUnique({
-    where: { tokenHash },
-    select: {
-      id: true,
-      userId: true,
-      expiresAt: true,
-      revokedAt: true,
-    },
-  });
+  const session = await sessionRepo.findSessionByHash(tokenHash);
+
 
   if (!session) return null;
   if (session.revokedAt) return null;
@@ -120,10 +108,8 @@ export async function revokeCurrentSession(): Promise<void> {
 
   const tokenHash = hashToken(token);
 
-  await prisma.session.updateMany({
-    where: { tokenHash, revokedAt: null },
-    data: { revokedAt: now() },
-  });
+  await sessionRepo.revokeSessionByHash(tokenHash, now());
+
 
   cookieStore.set({
     name: COOKIE_NAME,

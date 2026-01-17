@@ -1,4 +1,6 @@
-export type TicketStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+export declare const TICKET_STATUSES: readonly ["pending", "approved", "paid", "rejected"];
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+export declare function isTicketStatus(x: string): x is TicketStatus;
 export type Ticket = {
     id: string;
     status: TicketStatus;
@@ -30,6 +32,11 @@ export declare function assertApproved(ticket: Ticket): void;
 export declare function approve(ticket: Ticket): Ticket;
 export declare function reject(ticket: Ticket): Ticket;
 export declare function markPaid(ticket: Ticket): Ticket;
+/**
+ * Idempotent version of markPaid: if already paid, returns as-is.
+ * Otherwise attempts transition.
+ */
+export declare function markPaidIdempotent(ticket: Ticket): Ticket;
 export type EvidenceInput = {
     platform: string;
     text: string;
@@ -77,3 +84,14 @@ export interface TicketWriter {
     }): Promise<CreatedTicket>;
 }
 export declare function createTicketFromEvidence(repo: TicketWriter, input: CreateTicketInput): Promise<CreatedTicket>;
+export interface TicketReader {
+    getTicketById(id: string): Promise<CreatedTicket | null>;
+}
+export interface TicketUpdater {
+    updateTicketStatus(id: string, status: TicketStatus): Promise<CreatedTicket>;
+}
+/**
+ * Approve a ticket. Allowed only from:
+ * - pending -> approved
+ */
+export declare function approveTicket(repo: TicketReader & TicketUpdater, ticketId: string): Promise<CreatedTicket>;

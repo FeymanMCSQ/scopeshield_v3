@@ -61,8 +61,7 @@ export async function GET(req: Request) {
     const status = url.searchParams.get('status') ?? undefined;
 
     // Optional status filter, but keep it strict.
-    const allowed = new Set(['pending', 'approved', 'paid', 'rejected']);
-    if (status && !allowed.has(status)) {
+    if (status && !tickets.isTicketStatus(status)) {
       return NextResponse.json(
         { ok: false, error: 'BAD_STATUS' },
         { status: 400 }

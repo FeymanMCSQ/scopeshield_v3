@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { prisma } from '@scopeshield/db';
+import { userRepo } from '@scopeshield/db';
+
 import { createSession } from '@/lib/auth';
 
 export default function LoginPage() {
@@ -8,12 +9,8 @@ export default function LoginPage() {
 
     const email = 'dev@scopeshield.local';
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: { email, name: 'Dev User' },
-      select: { id: true },
-    });
+    const user = await userRepo.upsertDevUser(email, 'Dev User');
+
 
     await createSession(user.id); // <-- sets HTTP-only cookie on the real browser response
     redirect('/dashboard');

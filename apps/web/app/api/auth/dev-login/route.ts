@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@scopeshield/db';
+import { userRepo } from '@scopeshield/db';
+
 import { createSession } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -11,12 +12,8 @@ export async function POST() {
 
     const email = 'dev@scopeshield.local';
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: { email, name: 'Dev User' },
-      select: { id: true, email: true },
-    });
+    const user = await userRepo.upsertDevUser(email, 'Dev User');
+
 
     const session = await createSession(user.id);
 

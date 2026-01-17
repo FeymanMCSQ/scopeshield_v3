@@ -1,6 +1,7 @@
 // packages/domain/src/billing/billing.ts
 
-export type TicketStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+import { TicketStatus } from '../tickets';
+
 
 export type CheckoutTicket = {
   id: string;
@@ -55,4 +56,38 @@ export function createCheckoutForTicket(ticket: CheckoutTicket): CheckoutSpec {
       ss_kind: 'ticket_checkout',
     },
   };
+}
+
+/**
+ * Domain rule: verify that the payment amount and currency match the ticket.
+ */
+export function verifyPaymentMatch(
+  ticket: CheckoutTicket,
+  paidAmount: number | null,
+  paidCurrency: string | null
+): void {
+  const expectedAmount = ticket.priceCents;
+  if (expectedAmount == null) {
+    throw new Error('MISSING_EXPECTED_AMOUNT');
+  }
+
+  if (paidAmount !== expectedAmount) {
+    throw new Error('AMOUNT_MISMATCH');
+  }
+
+  const expectedCurrency = (ticket.currency ?? 'USD').toLowerCase();
+  const actualCurrency = (paidCurrency ?? '').toLowerCase();
+  if (actualCurrency !== expectedCurrency) {
+    throw new Error('CURRENCY_MISMATCH');
+  }
+}
+
+/**
+ * Domain rule: resolve the display currency label for captured revenue.
+ * If multiple currencies are present, it returns "MIXED".
+ */
+export function resolveRevenueCurrency(distinctCurrencies: string[]): string {
+  if (distinctCurrencies.length === 0) return 'USD';
+  if (distinctCurrencies.length === 1) return distinctCurrencies[0];
+  return 'MIXED';
 }

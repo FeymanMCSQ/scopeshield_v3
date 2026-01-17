@@ -5,7 +5,8 @@ import { stripe } from '@/lib/stripe';
 
 // Adjust imports to match your actual package exports:
 import { ticketRepo } from '@scopeshield/db';
-import { tickets } from '@scopeshield/domain';
+import { tickets, billing } from '@scopeshield/domain';
+
 
 export const runtime = 'nodejs'; // Stripe signature verification should run on Node
 
@@ -73,33 +74,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, warning: 'TicketNotFound' });
   }
 
-  // Verify amount/currency match what we expected (defense against mismatched sessions)
-  // Stripe uses lowercase currency codes.
-  const paidAmount = session.amount_total ?? null;
-  const paidCurrency = session.currency ?? null;
-
-  const expectedAmount = ticket.priceCents ?? null;
-  const expectedCurrency = (ticket.currency ?? 'USD').toLowerCase();
-
-  if (
-    expectedAmount == null ||
-    paidAmount == null ||
-    paidAmount !== expectedAmount ||
-    (paidCurrency && paidCurrency !== expectedCurrency)
-  ) {
-    console.error('Stripe webhook: amount/currency mismatch', {
+  // Domain decides if amount/currency match (reconciliation truth)
+  try {
+    billing.verifyPaymentMatch(ticket, session.amount_total, session.currency);
+  } catch (err) {
+    console.error('Stripe webhook: payment mismatch', {
       ticketId,
       eventId: event.id,
       sessionId: session.id,
-      paidAmount,
-      expectedAmount,
-      paidCurrency,
-      expectedCurrency,
+      error: err instanceof Error ? err.message : String(err),
+      paidAmount: session.amount_total,
+      expectedAmount: ticket.priceCents,
+      paidCurrency: session.currency,
+      expectedCurrency: ticket.currency,
     });
-
-    // Acknowledge webhook to avoid retries; this requires manual investigation.
-    return NextResponse.json({ ok: true, warning: 'AmountMismatch' });
+    return NextResponse.json({ ok: true, warning: 'PaymentMismatch' });
   }
+
 
   // Idempotency: if already paid, no-op.
   if (ticket.status === 'paid') {

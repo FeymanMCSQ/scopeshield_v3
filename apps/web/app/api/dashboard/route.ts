@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@scopeshield/db';
+import { userRepo } from '@scopeshield/db';
+
 import { requireSession } from '@/lib/authGuard';
 
 export const runtime = 'nodejs';
@@ -9,10 +10,8 @@ export async function GET() {
     const s = await requireSession();
 
     // Minimal payload for boundary test: return the user
-    const user = await prisma.user.findUnique({
-      where: { id: s.userId },
-      select: { id: true, email: true, name: true },
-    });
+    const user = await userRepo.findUserById(s.userId);
+
 
     return NextResponse.json({ ok: true, user });
   } catch (e: unknown) {

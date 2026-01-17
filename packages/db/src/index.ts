@@ -1,8 +1,9 @@
-export * from './client';
+// export * from './client';
+
 export {
   ticketRepo,
-  ticketWriter,
   getPublicTicketById,
+
   listTicketsForOwner,
   getRecapturedRevenueMetrics,
 } from './ticketsRepo';
@@ -11,3 +12,6 @@ export type {
   TicketListItemDto,
   RevenueMetrics,
 } from './ticketsRepo';
+
+export { userRepo } from './userRepo';
+export { sessionRepo } from './sessionRepo';

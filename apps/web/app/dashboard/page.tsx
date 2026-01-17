@@ -1,7 +1,8 @@
 // apps/web/app/dashboard/page.tsx
 import Link from 'next/link';
 import { requireSession } from '@/lib/authGuard';
-import { tickets } from '@scopeshield/domain';
+import { tickets, billing } from '@scopeshield/domain';
+
 
 // Adjust import path to match your workspace exports:
 import { listTicketsForOwner, getRecapturedRevenueMetrics } from '@scopeshield/db';
@@ -12,14 +13,9 @@ type SearchParams = {
   limit?: string;
 };
 
-const ALLOWED_STATUSES = [
-  'all',
-  'pending',
-  'approved',
-  'paid',
-  'rejected',
-] as const;
+const ALLOWED_STATUSES = ['all', ...tickets.TICKET_STATUSES] as const;
 type StatusFilter = (typeof ALLOWED_STATUSES)[number];
+
 
 function clampLimit(v: string | undefined): number {
   const n = v ? Number(v) : 20;
@@ -117,7 +113,11 @@ export default async function DashboardPage({
         >
           <div style={{ fontSize: 12, opacity: 0.7 }}>Recaptured revenue</div>
           <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4 }}>
-            {fmtMoneyCents(revenue.totalPaidCents, revenue.currency)}
+            {fmtMoneyCents(
+              revenue.totalPaidCents,
+              billing.resolveRevenueCurrency(revenue.currencies)
+            )}
+
           </div>
           <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
             Paid tickets: {revenue.paidCount}

@@ -65,11 +65,6 @@ export const ticketRepo: tickets.TicketWriter &
   },
 };
 
-/**
- * Re-exporting as ticketWriter for backward compatibility or strict interface adherence
- * where only writing is required.
- */
-export const ticketWriter: tickets.TicketWriter = ticketRepo;
 
 /**
  * Maps a Prisma record onto the Domain CreatedTicket shape.
@@ -219,8 +214,9 @@ export async function listTicketsForOwner(opts: {
 export type RevenueMetrics = {
   paidCount: number;
   totalPaidCents: number;
-  currency: string; // best-effort if single currency; otherwise "MIXED"
+  currencies: string[];
 };
+
 
 export async function getRecapturedRevenueMetrics(opts: {
   ownerUserId: string;
@@ -248,12 +244,10 @@ export async function getRecapturedRevenueMetrics(opts: {
     take: 2,
   });
 
-  const currency =
-    currencies.length === 0
-      ? 'USD'
-      : currencies.length === 1
-      ? currencies[0].currency
-      : 'MIXED';
-
-  return { paidCount, totalPaidCents, currency };
+  return {
+    paidCount,
+    totalPaidCents,
+    currencies: currencies.map((c) => c.currency),
+  };
 }
+
