@@ -1,3 +1,5 @@
+// apps/extension/src/sw.js
+
 const API_ORIGIN = 'http://localhost:3000'; // dev only; later replace with prod domain
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -8,7 +10,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       const res = await fetch(`${API_ORIGIN}/api/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // <-- sends ss_session cookie for API_ORIGIN
+        credentials: 'include', // sends ss_session cookie for API_ORIGIN
         body: JSON.stringify(msg.payload),
       });
 
@@ -16,25 +18,44 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       const isJson = contentType.includes('application/json');
 
       const data = isJson
-        ? await res.json()
-        : { ok: false, error: await res.text() };
+        ? await res.json().catch(() => ({ ok: false, error: 'BAD_JSON' }))
+        : { ok: false, error: await res.text().catch(() => 'NON_JSON_ERROR') };
 
-      if (!res.ok || !data.ok) {
+      // Normalize error handling: either HTTP failure or { ok:false } from server
+      if (!res.ok || !data || data.ok !== true) {
         sendResponse({
           ok: false,
           status: res.status,
-          error: data.error || 'REQUEST_FAILED',
+          error:
+            (data && data.error) || (data && data.message) || 'REQUEST_FAILED',
+        });
+        return;
+      }
+
+      // Normalize success shape defensively
+      const ticketId = data?.ticket?.id || data?.ticketId || null;
+      const shareUrl =
+        data?.shareUrl || (ticketId ? `${API_ORIGIN}/t/${ticketId}` : null);
+
+      if (!ticketId) {
+        sendResponse({
+          ok: false,
+          status: res.status,
+          error: 'MISSING_TICKET_ID',
         });
         return;
       }
 
       sendResponse({
         ok: true,
-        ticketId: data.ticket.id,
-        shareUrl: data.shareUrl, // server should return this
+        ticketId,
+        shareUrl,
       });
     } catch (e) {
-      sendResponse({ ok: false, error: String(e?.message || e) });
+      sendResponse({
+        ok: false,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   })();
 

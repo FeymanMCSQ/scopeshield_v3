@@ -91,9 +91,13 @@ export type PublicTicketView = {
   status: string;
   priceCents: number | null;
   currency: string;
+  evidenceText: string;
+  assetUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
+
+
 
 export async function getPublicTicketById(
   ticketId: string
@@ -105,9 +109,13 @@ export async function getPublicTicketById(
       status: true,
       priceCents: true,
       currency: true,
+      evidenceText: true,
+      assetUrl: true,
       createdAt: true,
       updatedAt: true,
     },
+
+
   });
 
   if (!t) return null;
@@ -117,8 +125,12 @@ export async function getPublicTicketById(
     status: t.status,
     priceCents: t.priceCents,
     currency: t.currency,
+    evidenceText: t.evidenceText,
+    assetUrl: t.assetUrl,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
+
+
   };
 }
 
