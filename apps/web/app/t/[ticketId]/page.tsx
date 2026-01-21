@@ -219,6 +219,41 @@ export default async function PublicTicketPage({
 
               </div>
             )}
+
+            {/* Payment Action */}
+            {ticket.status !== 'paid' && ticket.status !== 'rejected' && ticket.priceCents && ticket.priceCents > 0 && (
+              <div style={{ marginTop: 24, borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
+                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>Ready to proceed?</div>
+                      <div style={{ fontSize: 12, opacity: 0.7 }}>Secure payment via Stripe</div>
+                    </div>
+                    
+                    <form action={`/api/public/checkout/${ticket.id}`} method="POST">
+                      <button 
+                        type="submit"
+                        style={{
+                          backgroundColor: '#16a34a',
+                          color: 'white',
+                          padding: '0.75rem 1.5rem',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                      >
+                        <span>Pay {formatPrice(ticket.priceCents, ticket.currency)}</span>
+                        <span style={{ fontSize: '1.2em' }}>&rarr;</span>
+                      </button>
+                    </form>
+                 </div>
+              </div>
+            )}
           </div>
         </section>
 

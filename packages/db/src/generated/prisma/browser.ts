@@ -37,3 +37,8 @@ export type Session = Prisma.SessionModel
  * 
  */
 export type Ticket = Prisma.TicketModel
+/**
+ * Model ProcessedStripeEvent
+ * 
+ */
+export type ProcessedStripeEvent = Prisma.ProcessedStripeEventModel

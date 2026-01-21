@@ -30,6 +30,8 @@ export type UserMinAggregateOutputType = {
   name: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  stripeAccountId: string | null
+  subscriptionStatus: string | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -38,6 +40,8 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  stripeAccountId: string | null
+  subscriptionStatus: string | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -46,6 +50,8 @@ export type UserCountAggregateOutputType = {
   name: number
   createdAt: number
   updatedAt: number
+  stripeAccountId: number
+  subscriptionStatus: number
   _all: number
 }
 
@@ -56,6 +62,8 @@ export type UserMinAggregateInputType = {
   name?: true
   createdAt?: true
   updatedAt?: true
+  stripeAccountId?: true
+  subscriptionStatus?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -64,6 +72,8 @@ export type UserMaxAggregateInputType = {
   name?: true
   createdAt?: true
   updatedAt?: true
+  stripeAccountId?: true
+  subscriptionStatus?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -72,6 +82,8 @@ export type UserCountAggregateInputType = {
   name?: true
   createdAt?: true
   updatedAt?: true
+  stripeAccountId?: true
+  subscriptionStatus?: true
   _all?: true
 }
 
@@ -153,6 +165,8 @@ export type UserGroupByOutputType = {
   name: string | null
   createdAt: Date
   updatedAt: Date
+  stripeAccountId: string | null
+  subscriptionStatus: string | null
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
@@ -182,6 +196,8 @@ export type UserWhereInput = {
   name?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  stripeAccountId?: Prisma.StringNullableFilter<"User"> | string | null
+  subscriptionStatus?: Prisma.StringNullableFilter<"User"> | string | null
   sessions?: Prisma.SessionListRelationFilter
   tickets?: Prisma.TicketListRelationFilter
 }
@@ -192,6 +208,8 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  stripeAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
+  subscriptionStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   tickets?: Prisma.TicketOrderByRelationAggregateInput
 }
@@ -199,15 +217,17 @@ export type UserOrderByWithRelationInput = {
 export type UserWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   email?: string
+  stripeAccountId?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  subscriptionStatus?: Prisma.StringNullableFilter<"User"> | string | null
   sessions?: Prisma.SessionListRelationFilter
   tickets?: Prisma.TicketListRelationFilter
-}, "id" | "email">
+}, "id" | "email" | "stripeAccountId">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -215,6 +235,8 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  stripeAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
+  subscriptionStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
@@ -229,6 +251,8 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
+  stripeAccountId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  subscriptionStatus?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
 }
 
 export type UserCreateInput = {
@@ -237,6 +261,8 @@ export type UserCreateInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   tickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
 }
@@ -247,6 +273,8 @@ export type UserUncheckedCreateInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
 }
@@ -257,6 +285,8 @@ export type UserUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   tickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
 }
@@ -267,6 +297,8 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
 }
@@ -277,6 +309,8 @@ export type UserCreateManyInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
 }
 
 export type UserUpdateManyMutationInput = {
@@ -285,6 +319,8 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -293,6 +329,8 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -301,6 +339,8 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  stripeAccountId?: Prisma.SortOrder
+  subscriptionStatus?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -309,6 +349,8 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  stripeAccountId?: Prisma.SortOrder
+  subscriptionStatus?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -317,6 +359,8 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  stripeAccountId?: Prisma.SortOrder
+  subscriptionStatus?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -362,6 +406,8 @@ export type UserCreateWithoutSessionsInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   tickets?: Prisma.TicketCreateNestedManyWithoutOwnerInput
 }
 
@@ -371,6 +417,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutOwnerInput
 }
 
@@ -396,6 +444,8 @@ export type UserUpdateWithoutSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tickets?: Prisma.TicketUpdateManyWithoutOwnerNestedInput
 }
 
@@ -405,6 +455,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tickets?: Prisma.TicketUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
@@ -414,6 +466,8 @@ export type UserCreateWithoutTicketsInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
 }
 
@@ -423,6 +477,8 @@ export type UserUncheckedCreateWithoutTicketsInput = {
   name?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  stripeAccountId?: string | null
+  subscriptionStatus?: string | null
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -448,6 +504,8 @@ export type UserUpdateWithoutTicketsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
 }
 
@@ -457,6 +515,8 @@ export type UserUncheckedUpdateWithoutTicketsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stripeAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subscriptionStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -506,6 +566,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  stripeAccountId?: boolean
+  subscriptionStatus?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   tickets?: boolean | Prisma.User$ticketsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -517,6 +579,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  stripeAccountId?: boolean
+  subscriptionStatus?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -525,6 +589,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  stripeAccountId?: boolean
+  subscriptionStatus?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -533,9 +599,11 @@ export type UserSelectScalar = {
   name?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  stripeAccountId?: boolean
+  subscriptionStatus?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "createdAt" | "updatedAt" | "stripeAccountId" | "subscriptionStatus", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   tickets?: boolean | Prisma.User$ticketsArgs<ExtArgs>
@@ -556,6 +624,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string | null
     createdAt: Date
     updatedAt: Date
+    stripeAccountId: string | null
+    subscriptionStatus: string | null
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -986,6 +1056,8 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly stripeAccountId: Prisma.FieldRef<"User", 'String'>
+  readonly subscriptionStatus: Prisma.FieldRef<"User", 'String'>
 }
     
 

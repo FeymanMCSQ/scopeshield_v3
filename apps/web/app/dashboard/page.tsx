@@ -5,7 +5,7 @@ import { tickets, billing } from '@scopeshield/domain';
 
 
 // Adjust import path to match your workspace exports:
-import { listTicketsForOwner, getRecapturedRevenueMetrics } from '@scopeshield/db';
+import { listTicketsForOwner, getRecapturedRevenueMetrics, userRepo } from '@scopeshield/db';
 
 type SearchParams = {
   cursor?: string;
@@ -66,7 +66,7 @@ export default async function DashboardPage({
   const status = normalizeStatus(sp.status);
   const cursor = sp.cursor;
 
-  const [ticketData, revenue] = await Promise.all([
+  const [ticketData, revenue, user] = await Promise.all([
     listTicketsForOwner({
       ownerUserId: session.userId,
       limit,
@@ -74,9 +74,12 @@ export default async function DashboardPage({
       status: status === 'all' ? undefined : (status as tickets.TicketStatus),
     }),
     getRecapturedRevenueMetrics({ ownerUserId: session.userId }),
+    // Fetch full user to check stripeAccountId
+    userRepo.findUserById(session.userId), 
   ]);
 
   const { items, nextCursor } = ticketData;
+  const stripeConnected = !!user?.stripeAccountId;
 
   // Build query helper
   const baseQuery = (overrides: Partial<SearchParams> = {}) => {
@@ -99,6 +102,43 @@ export default async function DashboardPage({
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
         Dashboard
       </h1>
+
+      {/* Actions Bar */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        {!stripeConnected ? (
+           <form action="/api/stripe/onboard" method="POST">
+             <button type="submit" style={{ 
+               backgroundColor: '#6366f1', 
+               color: 'white', 
+               padding: '0.6rem 1.2rem', 
+               border: 'none', 
+               borderRadius: '6px', 
+               cursor: 'pointer',
+               fontWeight: 600
+             }}>
+               Connect with Stripe to Accept Payments
+             </button>
+           </form>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Link href="/dashboard/new" style={{ 
+              display: 'inline-block',
+              backgroundColor: '#059669', 
+              color: 'white', 
+              padding: '0.6rem 1.2rem', 
+              borderRadius: '6px', 
+              textDecoration: 'none',
+              fontWeight: 600
+            }}>
+              + Create New Ticket
+            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#10b981', fontWeight: 500 }}>
+              <span style={{ fontSize: '1.2em' }}>●</span>
+              <span>Stripe Connected</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       <section
         style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}
