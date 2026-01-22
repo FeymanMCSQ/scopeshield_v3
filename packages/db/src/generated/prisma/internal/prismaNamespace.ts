@@ -387,8 +387,7 @@ export const ModelName = {
   SanityCheck: 'SanityCheck',
   User: 'User',
   Session: 'Session',
-  Ticket: 'Ticket',
-  ProcessedStripeEvent: 'ProcessedStripeEvent'
+  Ticket: 'Ticket'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -404,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "sanityCheck" | "user" | "session" | "ticket" | "processedStripeEvent"
+    modelProps: "sanityCheck" | "user" | "session" | "ticket"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -704,80 +703,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    ProcessedStripeEvent: {
-      payload: Prisma.$ProcessedStripeEventPayload<ExtArgs>
-      fields: Prisma.ProcessedStripeEventFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ProcessedStripeEventFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ProcessedStripeEventFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        findFirst: {
-          args: Prisma.ProcessedStripeEventFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ProcessedStripeEventFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        findMany: {
-          args: Prisma.ProcessedStripeEventFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>[]
-        }
-        create: {
-          args: Prisma.ProcessedStripeEventCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        createMany: {
-          args: Prisma.ProcessedStripeEventCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ProcessedStripeEventCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>[]
-        }
-        delete: {
-          args: Prisma.ProcessedStripeEventDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        update: {
-          args: Prisma.ProcessedStripeEventUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        deleteMany: {
-          args: Prisma.ProcessedStripeEventDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ProcessedStripeEventUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ProcessedStripeEventUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>[]
-        }
-        upsert: {
-          args: Prisma.ProcessedStripeEventUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProcessedStripeEventPayload>
-        }
-        aggregate: {
-          args: Prisma.ProcessedStripeEventAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateProcessedStripeEvent>
-        }
-        groupBy: {
-          args: Prisma.ProcessedStripeEventGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ProcessedStripeEventGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ProcessedStripeEventCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ProcessedStripeEventCountAggregateOutputType> | number
-        }
-      }
-    }
   }
 } & {
   other: {
@@ -833,7 +758,8 @@ export const UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   stripeAccountId: 'stripeAccountId',
-  subscriptionStatus: 'subscriptionStatus'
+  subscriptionStatus: 'subscriptionStatus',
+  passwordHash: 'passwordHash'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -867,15 +793,6 @@ export const TicketScalarFieldEnum = {
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
-
-
-export const ProcessedStripeEventScalarFieldEnum = {
-  id: 'id',
-  type: 'type',
-  processedAt: 'processedAt'
-} as const
-
-export type ProcessedStripeEventScalarFieldEnum = (typeof ProcessedStripeEventScalarFieldEnum)[keyof typeof ProcessedStripeEventScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1076,7 +993,6 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   session?: Prisma.SessionOmit
   ticket?: Prisma.TicketOmit
-  processedStripeEvent?: Prisma.ProcessedStripeEventOmit
 }
 
 /* Types for Logging */

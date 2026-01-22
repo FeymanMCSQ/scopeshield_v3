@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 import { tickets } from '@scopeshield/domain';
 import { ticketRepo } from '@scopeshield/db';
 
@@ -11,7 +11,8 @@ export async function POST(
 ) {
   try {
     const { ticketId } = await params;
-    const s = await requireSession();
+    const s = await getCurrentUser();
+    if (!s) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
     // Ownership enforcement (simple, not perfect, but prevents obvious leakage)
     const existing = await ticketRepo.getTicketById(ticketId);
@@ -20,7 +21,7 @@ export async function POST(
         { ok: false, error: 'NOT_FOUND' },
         { status: 404 }
       );
-    if (existing.ownerUserId !== s.userId) {
+    if (existing.ownerUserId !== s.id) {
       return NextResponse.json(
         { ok: false, error: 'FORBIDDEN' },
         { status: 403 }

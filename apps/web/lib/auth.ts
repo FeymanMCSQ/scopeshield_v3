@@ -1,123 +1,48 @@
-import crypto from 'crypto';
-import { cookies } from 'next/headers';
-import { sessionRepo } from '@scopeshield/db';
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { userRepo } from '@scopeshield/db';
+import { redirect } from 'next/navigation';
 
+export async function getCurrentUser() {
+  const { userId } = await auth();
 
-const COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? 'ss_session';
-const TTL_DAYS = Number(process.env.SESSION_TTL_DAYS ?? '30');
+  if (!userId) {
+    redirect('/sign-in'); // Redirect to Clerk login
+  }
 
+  // Check if user exists in our DB
+  let dbUser = await userRepo.findUserById(userId);
 
-function now(): Date {
-  return new Date();
+  if (!dbUser) {
+    // Lazy Sync: Create user if missing
+    // We need more details from Clerk to create the user properly (like email)
+    const clerkUser = await currentUser();
+
+    if (!clerkUser) {
+      // Should theoretically not happen if auth() returned a userId
+      redirect('/sign-in');
+    }
+
+    const email = clerkUser.emailAddresses[0]?.emailAddress ?? 'no-email@clerk.user';
+    const name = `${clerkUser.firstName} ${clerkUser.lastName}`.trim();
+
+    // We can't use 'createUserWithPassword' or 'upsertDevUser' exactly as is because
+    // we want to force the ID to match Clerk's ID.
+    // So we'll need to extend userRepo slightly or use prisma directly here if repo allows.
+    // For now, let's assume we update userRepo to support creating with explicit ID.
+    // OR we use upsert with the ID. 
+
+    // Let's modify userRepo to allow creating with a specific ID, 
+    // or just use a new method 'syncClerkUser'.
+
+    // For this step, I'll assume we'll add 'syncClerkUser' to userRepo next or just use a workaround.
+    // I will use a direct prisma call in a separate file or just wait to update userRepo.
+    // Actually, let's return null here and handle the sync in the repo update step easier.
+
+    // But to keep this file compiling, let's assume `syncClerkUser` exists.
+    dbUser = await userRepo.syncClerkUser(userId, email, name);
+  }
+
+  return dbUser;
 }
 
-function addDays(d: Date, days: number): Date {
-  const out = new Date(d);
-  out.setDate(out.getDate() + days);
-  return out;
-}
 
-/**
- * Generate a random session token that goes to the browser cookie.
- * Store only its hash in DB.
- */
-function generateSessionToken(): string {
-  return crypto.randomBytes(32).toString('base64url'); // URL-safe
-}
-
-function hashToken(token: string): string {
-  // SHA-256 is fine here; store hex in DB.
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-export type AuthSession = {
-  userId: string;
-  sessionId: string;
-  expiresAt: Date;
-};
-
-/**
- * Creates a DB session and sets an HTTP-only cookie.
- * Returns session metadata (not the raw token).
- */
-export async function createSession(userId: string): Promise<AuthSession> {
-  if (!userId) throw new Error('userId is required');
-
-  const token = generateSessionToken();
-  const tokenHash = hashToken(token);
-  const expiresAt = addDays(now(), TTL_DAYS);
-
-  const session = await sessionRepo.createSession({
-    userId,
-    tokenHash,
-    expiresAt,
-  });
-
-
-  // HTTP-only cookie: JS cannot read it. Extension also doesn't store tokens.
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    expires: expiresAt,
-  });
-
-  return {
-    userId: session.userId,
-    sessionId: session.id,
-    expiresAt: session.expiresAt,
-  };
-}
-
-/**
- * Reads session cookie, validates against DB.
- * Returns userId if valid, otherwise null.
- */
-export async function validateSession(): Promise<{
-  userId: string;
-  sessionId: string;
-} | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-
-  const tokenHash = hashToken(token);
-
-  const session = await sessionRepo.findSessionByHash(tokenHash);
-
-
-  if (!session) return null;
-  if (session.revokedAt) return null;
-  if (session.expiresAt <= now()) return null;
-
-  return { userId: session.userId, sessionId: session.id };
-}
-
-/**
- * Optional: log out by revoking current session and clearing cookie.
- * Not required for Mission 1.2, but useful for testing.
- */
-export async function revokeCurrentSession(): Promise<void> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return;
-
-  const tokenHash = hashToken(token);
-
-  await sessionRepo.revokeSessionByHash(tokenHash, now());
-
-
-  cookieStore.set({
-    name: COOKIE_NAME,
-    value: '',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    expires: new Date(0),
-  });
-}

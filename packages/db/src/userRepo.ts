@@ -11,13 +11,37 @@ export const userRepo = {
   async findUserById(id: string) {
     return prisma.user.findUnique({
       where: { id },
-      select: { 
-        id: true, 
-        email: true, 
+      select: {
+        id: true,
+        email: true,
         name: true,
         stripeAccountId: true,
         subscriptionStatus: true,
+        passwordHash: true, // Only for internal checks if needed, usually excluded from public DTOs
       },
+    });
+  },
+
+  async findUserByEmail(email: string) {
+    return prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+      },
+    });
+  },
+
+  async createUserWithPassword(email: string, passwordHash: string, name: string) {
+    return prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        name,
+      },
+      select: { id: true, email: true },
     });
   },
 
@@ -29,6 +53,23 @@ export const userRepo = {
       select: { id: true, email: true },
     });
   },
+
+  async syncClerkUser(id: string, email: string, name: string) {
+    return prisma.user.upsert({
+      where: { id },
+      update: { email, name },
+      create: { id, email, name },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        stripeAccountId: true,
+        subscriptionStatus: true,
+        passwordHash: true
+      },
+    });
+  },
+
 
   async updateStripeAccount(userId: string, stripeAccountId: string) {
     return prisma.user.update({

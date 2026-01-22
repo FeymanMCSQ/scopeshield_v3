@@ -24,6 +24,7 @@ model User {
 
   stripeAccountId    String? @unique
   subscriptionStatus String? @default("none")
+  passwordHash       String?
 
   sessions  Session[]
   tickets   Ticket[]

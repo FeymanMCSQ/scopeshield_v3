@@ -1,25 +1,28 @@
 import { NextResponse } from 'next/server';
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 import { ticketRepo } from '@scopeshield/db';
 import { tickets } from '@scopeshield/domain';
 
 export async function POST(req: Request) {
   try {
-    const session = await requireSession();
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const formData = await req.formData();
     const description = formData.get('description') as string;
     const priceStr = formData.get('price') as string;
 
     if (!description || !priceStr) {
-        return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
     const priceCents = Math.round(parseFloat(priceStr) * 100);
 
     // Business Logic: Create ticket
     const ticket = await tickets.createTicketFromEvidence(ticketRepo, {
-      ownerUserId: session.userId,
+      ownerUserId: session.id,
       evidence: {
         platform: 'manual',
         text: description,

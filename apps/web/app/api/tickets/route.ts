@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 import { tickets } from '@scopeshield/domain';
 import { ticketRepo, listTicketsForOwner } from '@scopeshield/db';
 
@@ -14,11 +14,12 @@ function getOrigin(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const s = await requireSession();
+    const s = await getCurrentUser();
+    if (!s) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
 
     const ticket = await tickets.createTicketFromEvidence(ticketRepo, {
-      ownerUserId: s.userId,
+      ownerUserId: s.id,
       evidence: {
         platform: body.platform,
         text: body.text,
@@ -53,7 +54,8 @@ function parseLimit(v: string | null): number {
 
 export async function GET(req: Request) {
   try {
-    const s = await requireSession();
+    const s = await getCurrentUser();
+    if (!s) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
     const url = new URL(req.url);
     const limit = parseLimit(url.searchParams.get('limit'));
@@ -69,7 +71,7 @@ export async function GET(req: Request) {
     }
 
     const { items, nextCursor } = await listTicketsForOwner({
-      ownerUserId: s.userId,
+      ownerUserId: s.id,
       limit,
       cursor,
       status: status as tickets.TicketStatus,

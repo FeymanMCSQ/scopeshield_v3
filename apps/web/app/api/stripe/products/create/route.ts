@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { stripeClient, ensureStripeKey } from '@scopeshield/domain';
-import { validateSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 
 /**
  * POST /api/stripe/products/create
@@ -11,8 +11,8 @@ export async function POST(req: Request) {
   try {
     ensureStripeKey();
 
-    const session = await validateSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -33,14 +33,14 @@ export async function POST(req: Request) {
      * Use the stripeAccount header to create products on the connected account.
      */
     await stripeClient.products.create({
-        name: name,
-        description: description,
-        default_price_data: {
-            unit_amount: priceInCents,
-            currency: 'usd',
-        },
+      name: name,
+      description: description,
+      default_price_data: {
+        unit_amount: priceInCents,
+        currency: 'usd',
+      },
     }, {
-        stripeAccount: accountId,
+      stripeAccount: accountId,
     });
 
     // In a real app, you would redirect back to the dashboard or show success.

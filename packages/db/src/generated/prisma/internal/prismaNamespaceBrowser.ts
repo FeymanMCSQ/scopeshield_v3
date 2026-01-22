@@ -54,8 +54,7 @@ export const ModelName = {
   SanityCheck: 'SanityCheck',
   User: 'User',
   Session: 'Session',
-  Ticket: 'Ticket',
-  ProcessedStripeEvent: 'ProcessedStripeEvent'
+  Ticket: 'Ticket'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -90,7 +89,8 @@ export const UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   stripeAccountId: 'stripeAccountId',
-  subscriptionStatus: 'subscriptionStatus'
+  subscriptionStatus: 'subscriptionStatus',
+  passwordHash: 'passwordHash'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -124,15 +124,6 @@ export const TicketScalarFieldEnum = {
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
-
-
-export const ProcessedStripeEventScalarFieldEnum = {
-  id: 'id',
-  type: 'type',
-  processedAt: 'processedAt'
-} as const
-
-export type ProcessedStripeEventScalarFieldEnum = (typeof ProcessedStripeEventScalarFieldEnum)[keyof typeof ProcessedStripeEventScalarFieldEnum]
 
 
 export const SortOrder = {

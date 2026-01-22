@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { stripeClient, ensureStripeKey } from '@scopeshield/domain';
 import { userRepo } from '@scopeshield/db';
-import { validateSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 
 /**
  * POST /api/stripe/onboard
@@ -13,13 +13,12 @@ export async function POST(req: Request) {
   try {
     ensureStripeKey();
 
-    const session = await validateSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = session;
-    const user = await userRepo.findUserById(userId);
+    const userId = user.id;
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

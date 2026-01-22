@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 
 import { stripe } from '@/lib/stripe';
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 
 // Adjust these imports to match your actual db exports
 import { ticketRepo } from '@scopeshield/db'; // or wherever your repo is exported from
@@ -19,7 +19,8 @@ export async function POST(
 ) {
   const { ticketId } = await ctx.params;
 
-  const session = await requireSession();
+  const session = await getCurrentUser();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const baseUrl = getBaseUrl();
 
   // 1) Load ticket (private/full shape)
@@ -30,7 +31,7 @@ export async function POST(
   }
 
   // 2) Ownership enforcement at the boundary
-  if (ticket.ownerUserId !== session.userId) {
+  if (ticket.ownerUserId !== session.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

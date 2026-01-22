@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import { userRepo } from '@scopeshield/db';
 
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
   try {
-    const s = await requireSession();
-
-    // Minimal payload for boundary test: return the user
-    const user = await userRepo.findUserById(s.userId);
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+    }
 
 
     return NextResponse.json({ ok: true, user });

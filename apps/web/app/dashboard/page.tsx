@@ -1,6 +1,6 @@
 // apps/web/app/dashboard/page.tsx
 import Link from 'next/link';
-import { requireSession } from '@/lib/authGuard';
+import { getCurrentUser } from '@/lib/auth';
 import { tickets, billing } from '@scopeshield/domain';
 
 
@@ -60,7 +60,12 @@ export default async function DashboardPage({
 }) {
   const sp = await searchParams;
 
-  const session = await requireSession();
+  const session = await getCurrentUser();
+
+  if (!session) {
+    // Should be handled by auth guard in getCurrentUser, but for type safety:
+    return null;
+  }
 
   const limit = clampLimit(sp.limit);
   const status = normalizeStatus(sp.status);
@@ -68,14 +73,14 @@ export default async function DashboardPage({
 
   const [ticketData, revenue, user] = await Promise.all([
     listTicketsForOwner({
-      ownerUserId: session.userId,
+      ownerUserId: session.id,
       limit,
       cursor: cursor || undefined,
       status: status === 'all' ? undefined : (status as tickets.TicketStatus),
     }),
-    getRecapturedRevenueMetrics({ ownerUserId: session.userId }),
+    getRecapturedRevenueMetrics({ ownerUserId: session.id }),
     // Fetch full user to check stripeAccountId
-    userRepo.findUserById(session.userId), 
+    userRepo.findUserById(session.id),
   ]);
 
   const { items, nextCursor } = ticketData;
@@ -106,27 +111,27 @@ export default async function DashboardPage({
       {/* Actions Bar */}
       <div style={{ marginBottom: '1.5rem' }}>
         {!stripeConnected ? (
-           <form action="/api/stripe/onboard" method="POST">
-             <button type="submit" style={{ 
-               backgroundColor: '#6366f1', 
-               color: 'white', 
-               padding: '0.6rem 1.2rem', 
-               border: 'none', 
-               borderRadius: '6px', 
-               cursor: 'pointer',
-               fontWeight: 600
-             }}>
-               Connect with Stripe to Accept Payments
-             </button>
-           </form>
+          <form action="/api/stripe/onboard" method="POST">
+            <button type="submit" style={{
+              backgroundColor: '#6366f1',
+              color: 'white',
+              padding: '0.6rem 1.2rem',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}>
+              Connect with Stripe to Accept Payments
+            </button>
+          </form>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Link href="/dashboard/new" style={{ 
+            <Link href="/dashboard/new" style={{
               display: 'inline-block',
-              backgroundColor: '#059669', 
-              color: 'white', 
-              padding: '0.6rem 1.2rem', 
-              borderRadius: '6px', 
+              backgroundColor: '#059669',
+              color: 'white',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '6px',
               textDecoration: 'none',
               fontWeight: 600
             }}>
@@ -175,7 +180,7 @@ export default async function DashboardPage({
         }}
       >
         <div style={{ fontSize: 12, opacity: 0.75 }}>
-          User: <code>{session.userId}</code>
+          User: <code>{session.id}</code>
         </div>
 
         <div
