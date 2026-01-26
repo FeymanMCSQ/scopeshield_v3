@@ -61,3 +61,29 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   return true; // async response
 });
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (!msg || msg.type !== 'SS_CHECK_AUTH') return;
+
+  (async () => {
+    try {
+      const res = await fetch(`${API_ORIGIN}/api/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      // api/auth/me returns 401 if not logged in, 200 if logged in
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.ok) {
+        sendResponse({ ok: true, user: data.user });
+      } else {
+        // 401 or other error
+        sendResponse({ ok: false });
+      }
+    } catch (e) {
+      sendResponse({ ok: false, error: String(e) });
+    }
+  })();
+
+  return true; // async response
+});

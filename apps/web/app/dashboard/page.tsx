@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import { tickets, billing } from '@scopeshield/domain';
-
+import { Check, Clock, Plus, ArrowRight, DollarSign, ListFilter, CreditCard } from 'lucide-react';
 
 // Adjust import path to match your workspace exports:
 import { listTicketsForOwner, getRecapturedRevenueMetrics, userRepo } from '@scopeshield/db';
@@ -15,7 +15,6 @@ type SearchParams = {
 
 const ALLOWED_STATUSES = ['all', ...tickets.TICKET_STATUSES] as const;
 type StatusFilter = (typeof ALLOWED_STATUSES)[number];
-
 
 function clampLimit(v: string | undefined): number {
   const n = v ? Number(v) : 20;
@@ -49,7 +48,7 @@ function fmtDate(d: Date) {
 }
 
 function fmtMoneyCents(cents: number, currency: string) {
-  if (currency === 'MIXED') return `${(cents / 100).toFixed(2)} (mixed currencies)`;
+  if (currency === 'MIXED') return `${(cents / 100).toFixed(2)} (mixed)`;
   return `${currency.toUpperCase()} ${(cents / 100).toFixed(2)}`;
 }
 
@@ -59,13 +58,9 @@ export default async function DashboardPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-
   const session = await getCurrentUser();
 
-  if (!session) {
-    // Should be handled by auth guard in getCurrentUser, but for type safety:
-    return null;
-  }
+  if (!session) return null;
 
   const limit = clampLimit(sp.limit);
   const status = normalizeStatus(sp.status);
@@ -79,7 +74,6 @@ export default async function DashboardPage({
       status: status === 'all' ? undefined : (status as tickets.TicketStatus),
     }),
     getRecapturedRevenueMetrics({ ownerUserId: session.id }),
-    // Fetch full user to check stripeAccountId
     userRepo.findUserById(session.id),
   ]);
 
@@ -96,286 +90,172 @@ export default async function DashboardPage({
     if (finalLimit) q.set('limit', finalLimit);
 
     if (overrides.cursor) q.set('cursor', overrides.cursor);
-    // If overrides.cursor is explicitly undefined, omit cursor (go back to first page)
     if (overrides.cursor === undefined) q.delete('cursor');
 
     return `/dashboard?${q.toString()}`;
   };
 
   return (
-    <main style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
-        Dashboard
-      </h1>
+    <main className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-3xl font-bold text-emerald-950 tracking-tight">Dashboard</h1>
+            <p className="text-emerald-900/60 mt-2">Manage your tickets and revenue.</p>
+          </div>
 
-      {/* Actions Bar */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        {!stripeConnected ? (
-          <form action="/api/stripe/onboard" method="POST">
-            <button type="submit" style={{
-              backgroundColor: '#6366f1',
-              color: 'white',
-              padding: '0.6rem 1.2rem',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 600
-            }}>
-              Connect with Stripe to Accept Payments
-            </button>
-          </form>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Link href="/dashboard/new" style={{
-              display: 'inline-block',
-              backgroundColor: '#059669',
-              color: 'white',
-              padding: '0.6rem 1.2rem',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontWeight: 600
-            }}>
-              + Create New Ticket
-            </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#10b981', fontWeight: 500 }}>
-              <span style={{ fontSize: '1.2em' }}>●</span>
-              <span>Stripe Connected</span>
+          <div className="flex items-center gap-4">
+            {!stripeConnected ? (
+              <form action="/api/stripe/onboard" method="POST">
+                <button type="submit" className="flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-sm font-medium">
+                  <CreditCard className="w-4 h-4 mr-2" /> Connect Stripe
+                </button>
+              </form>
+            ) : (
+              <>
+                <div className="hidden md:flex items-center px-3 py-1 bg-emerald-100/50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-200/50">
+                  <Check className="w-3 h-3 mr-1.5" /> Stripe Connected
+                </div>
+                <Link href="/dashboard/new" className="flex items-center px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-sm shadow-emerald-600/20 font-medium">
+                  <Plus className="w-4 h-4 mr-2" /> Create Ticket
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-emerald-900/60">Recaptured Revenue</span>
+              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                <DollarSign className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-emerald-950 mb-1">
+              {fmtMoneyCents(
+                revenue.totalPaidCents,
+                billing.resolveRevenueCurrency(revenue.currencies)
+              )}
+            </div>
+            <div className="text-sm text-emerald-900/40">
+              Across {revenue.paidCount} paid tickets
             </div>
           </div>
-        )}
-      </div>
-
-      <section
-        style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}
-      >
-        <div
-          style={{
-            border: '1px solid #e5e5e5',
-            borderRadius: 12,
-            padding: 12,
-            minWidth: 220,
-          }}
-        >
-          <div style={{ fontSize: 12, opacity: 0.7 }}>Recaptured revenue</div>
-          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4 }}>
-            {fmtMoneyCents(
-              revenue.totalPaidCents,
-              billing.resolveRevenueCurrency(revenue.currencies)
-            )}
-
-          </div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
-            Paid tickets: {revenue.paidCount}
-          </div>
-        </div>
-      </section>
-
-      <section
-        style={{
-          display: 'flex',
-          gap: 12,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ fontSize: 12, opacity: 0.75 }}>
-          User: <code>{session.id}</code>
         </div>
 
-        <div
-          style={{
-            marginLeft: 'auto',
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Status filters */}
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="p-2 text-emerald-900/40">
+            <ListFilter className="w-5 h-5" />
+          </div>
           {ALLOWED_STATUSES.map((s) => {
             const active = s === status;
             return (
               <Link
                 key={s}
                 href={baseQuery({ status: s, cursor: undefined })}
-                style={{
-                  padding: '6px 10px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  textDecoration: 'none',
-                  fontSize: 12,
-                  background: active ? '#f3f3f3' : 'transparent',
-                  color: 'inherit',
-                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${active
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/10'
+                    : 'bg-white text-emerald-900/60 hover:bg-emerald-50 border border-transparent hover:border-emerald-100'
+                  }`}
               >
-                {s}
+                {s.charAt(0).toUpperCase() + s.slice(1)}
               </Link>
             );
           })}
         </div>
-      </section>
 
-      <section
-        style={{
-          border: '1px solid #e5e5e5',
-          borderRadius: 12,
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            padding: 12,
-            borderBottom: '1px solid #eee',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          <div style={{ fontSize: 14, fontWeight: 600 }}>Tickets</div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>
-            Showing {items.length} / {limit}
-          </div>
-
-          <div
-            style={{
-              marginLeft: 'auto',
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ fontSize: 12, opacity: 0.7 }}>Limit:</div>
-            {[10, 20, 50, 100].map((n) => (
-              <Link
-                key={n}
-                href={baseQuery({ limit: String(n), cursor: undefined })}
-                style={{
-                  padding: '6px 10px',
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  textDecoration: 'none',
-                  fontSize: 12,
-                  background: n === limit ? '#f3f3f3' : 'transparent',
-                  color: 'inherit',
-                }}
-              >
-                {n}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', fontSize: 12, opacity: 0.8 }}>
-                <th style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                  Status
-                </th>
-                <th style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                  Price
-                </th>
-                <th style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                  Created
-                </th>
-                <th style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                  Updated
-                </th>
-                <th style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-                  Link
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    style={{ padding: 12, fontSize: 13, opacity: 0.75 }}
-                  >
-                    No tickets found.
-                  </td>
-                </tr>
-              ) : (
-                items.map((t) => (
-                  <tr key={t.id} style={{ fontSize: 13 }}>
-                    <td
-                      style={{ padding: 12, borderBottom: '1px solid #f2f2f2' }}
-                    >
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '2px 8px',
-                          borderRadius: 999,
-                          border: '1px solid #ddd',
-                          fontSize: 12,
-                        }}
-                      >
-                        {t.status}
-                      </span>
-                    </td>
-                    <td
-                      style={{ padding: 12, borderBottom: '1px solid #f2f2f2' }}
-                    >
-                      {fmtMoney(t.priceCents, t.currency)}
-                    </td>
-                    <td
-                      style={{ padding: 12, borderBottom: '1px solid #f2f2f2' }}
-                    >
-                      {fmtDate(t.createdAt)}
-                    </td>
-                    <td
-                      style={{ padding: 12, borderBottom: '1px solid #f2f2f2' }}
-                    >
-                      {fmtDate(t.updatedAt)}
-                    </td>
-                    <td
-                      style={{ padding: 12, borderBottom: '1px solid #f2f2f2' }}
-                    >
-                      <Link
-                        href={`/t/${t.id}`}
-                        style={{ textDecoration: 'none' }}
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div
-          style={{
-            padding: 12,
-            display: 'flex',
-            gap: 10,
-            justifyContent: 'space-between',
-          }}
-        >
-          {/* Reset to first page */}
-          <Link
-            href={baseQuery({ cursor: undefined })}
-            style={{ fontSize: 12, textDecoration: 'none' }}
-          >
-            First page
-          </Link>
-
-          {/* Next page */}
-          {nextCursor ? (
-            <Link
-              href={baseQuery({ cursor: nextCursor })}
-              style={{ fontSize: 12, textDecoration: 'none' }}
-            >
-              Next →
-            </Link>
+        {/* Ticket List */}
+        <div className="bg-white border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+          {items.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="inline-flex p-4 bg-emerald-50 rounded-full text-emerald-200 mb-4">
+                <Clock className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-medium text-emerald-950 mb-1">No tickets found</h3>
+              <p className="text-emerald-900/40">Get started by creating your first ticket.</p>
+            </div>
           ) : (
-            <span style={{ fontSize: 12, opacity: 0.5 }}>Next →</span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-emerald-100/50 bg-emerald-50/30">
+                    <th className="px-6 py-4 text-xs font-semibold text-emerald-900/50 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-emerald-900/50 uppercase tracking-wider">Price</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-emerald-900/50 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-emerald-900/50 uppercase tracking-wider">Updated</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-emerald-900/50 uppercase tracking-wider text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-100/50">
+                  {items.map((t) => (
+                    <tr key={t.id} className="hover:bg-emerald-50/30 transition-colors group">
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${t.status === 'paid' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                            t.status === 'approved' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              t.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                                'bg-gray-100 text-gray-600 border-gray-200'
+                          }`}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-emerald-950">
+                        {fmtMoney(t.priceCents, t.currency)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-emerald-900/60">
+                        {fmtDate(t.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-emerald-900/60">
+                        {fmtDate(t.updatedAt)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link href={`/t/${t.id}`} className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700">
+                          View <ArrowRight className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
+
+          {/* Pagination */}
+          <div className="px-6 py-4 border-t border-emerald-100/50 flex items-center justify-between bg-emerald-50/20">
+            <Link
+              href={baseQuery({ cursor: undefined })}
+              className={`text-sm font-medium ${!cursor ? 'text-gray-400 pointer-events-none' : 'text-emerald-600 hover:text-emerald-700'}`}
+            >
+              First page
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-emerald-900/40 mr-2">Rows per page:</span>
+              {[10, 20, 50].map((n) => (
+                <Link
+                  key={n}
+                  href={baseQuery({ limit: String(n), cursor: undefined })}
+                  className={`px-2 py-1 rounded text-xs transition-colors ${n === limit
+                      ? 'bg-emerald-100 text-emerald-800 font-medium'
+                      : 'text-emerald-900/40 hover:bg-emerald-50'
+                    }`}
+                >
+                  {n}
+                </Link>
+              ))}
+            </div>
+
+            <Link
+              href={nextCursor ? baseQuery({ cursor: nextCursor }) : '#'}
+              className={`text-sm font-medium ${!nextCursor ? 'text-gray-400 pointer-events-none' : 'text-emerald-600 hover:text-emerald-700'}`}
+            >
+              Next Page &rarr;
+            </Link>
+          </div>
         </div>
-      </section>
+      </div>
     </main>
   );
 }

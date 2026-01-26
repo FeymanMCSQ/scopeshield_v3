@@ -113,3 +113,40 @@ async function createTicket() {
 $('submit').addEventListener('click', () => {
   createTicket();
 });
+
+// Auth Flow
+const viewLoading = $('view-loading');
+const viewSignin = $('view-signin');
+const viewMain = $('view-main');
+const signinBtn = $('signin-btn');
+
+function showView(viewId) {
+  [viewLoading, viewSignin, viewMain].forEach((el) => {
+    el.style.display = el.id === viewId ? 'block' : 'none';
+  });
+}
+
+async function checkAuth() {
+  showView('view-loading');
+  try {
+    const res = await chrome.runtime.sendMessage({ type: 'SS_CHECK_AUTH' });
+    if (res && res.ok) {
+      showView('view-main');
+    } else {
+      showView('view-signin');
+    }
+  } catch (e) {
+    console.error('Auth check failed', e);
+    showView('view-signin');
+  }
+}
+
+signinBtn.addEventListener('click', () => {
+  // Open sign in page
+  chrome.tabs.create({ url: 'http://localhost:3000/sign-in' });
+});
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+});

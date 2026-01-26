@@ -77,40 +77,52 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Manual ticket</h1>
-
-      <label for="text">Client request</label>
-      <textarea
-        id="text"
-        placeholder="Paste/type the client request..."
-      ></textarea>
-
-      <div class="row">
-        <div>
-          <label for="price">Price (USD)</label>
-          <input
-            id="price"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="50.00"
-          />
-        </div>
-        <div>
-          <label for="currency">Currency</label>
-          <input id="currency" type="text" value="USD" />
-        </div>
+      <div id="view-loading" style="text-align:center; padding: 20px;">
+        <p>Checking authentication...</p>
       </div>
 
-      <label for="shot">Screenshot (optional)</label>
-      <input id="shot" type="file" accept="image/*" />
-      <div class="hint">
-        MVP note: stored as a data URL in assetUrl (size capped).
+      <div id="view-signin" style="display:none; text-align:center; padding: 20px;">
+        <h1>Please Sign In</h1>
+        <p>You need to be logged in to ScopeShield to capture tickets.</p>
+        <button id="signin-btn">Sign In to ScopeShield</button>
       </div>
 
-      <button id="submit">Create ticket</button>
+      <div id="view-main" style="display:none;">
+        <h1>Manual ticket</h1>
 
-      <div id="msg" class="msg"></div>
+        <label for="text">Client request</label>
+        <textarea
+          id="text"
+          placeholder="Paste/type the client request..."
+        ></textarea>
+
+        <div class="row">
+          <div>
+            <label for="price">Price (USD)</label>
+            <input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="50.00"
+            />
+          </div>
+          <div>
+            <label for="currency">Currency</label>
+            <input id="currency" type="text" value="USD" />
+          </div>
+        </div>
+
+        <label for="shot">Screenshot (optional)</label>
+        <input id="shot" type="file" accept="image/*" />
+        <div class="hint">
+          MVP note: stored as a data URL in assetUrl (size capped).
+        </div>
+
+        <button id="submit">Create ticket</button>
+
+        <div id="msg" class="msg"></div>
+      </div>
     </div>
 
     <script src="popup.js"></script>

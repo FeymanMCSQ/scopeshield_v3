@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { userRepo } from '@scopeshield/db';
 import { redirect } from 'next/navigation';
+import { TicketForm } from './TicketForm';
 
 export default async function NewTicketPage() {
   const session = await getCurrentUser();
@@ -9,77 +10,32 @@ export default async function NewTicketPage() {
   const user = await userRepo.findUserById(session.id);
 
   if (!user?.stripeAccountId) {
-    // Force them to onboard first (or we could show a warning)
-    // For now, let's just show a message or redirect back to dashboard
     return (
-      <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'system-ui, sans-serif' }}>
-        <h1>Setup Required</h1>
-        <p>You need to connect your Stripe account before creating manual tickets.</p>
-        <a href="/dashboard" style={{ color: '#2563eb' }}>Back to Dashboard</a>
-      </div>
+      <main className="min-h-screen bg-gray-50/50 pb-20 pt-12">
+        <div className="max-w-xl mx-auto px-6 bg-white p-8 rounded-2xl border border-emerald-100 shadow-sm text-center">
+          <h1 className="text-2xl font-bold text-emerald-950 mb-4">Setup Required</h1>
+          <p className="text-emerald-900/60 mb-8">You need to connect your Stripe account before creating manual tickets.</p>
+          <a href="/dashboard" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-sm font-medium">Back to Dashboard</a>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Create New Ticket</h1>
+    <main className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="max-w-2xl mx-auto px-6 py-12">
+        <h1 className="text-3xl font-bold text-emerald-950 tracking-tight mb-8">Create New Ticket</h1>
 
-      <form action="/api/dashboard/tickets/create" method="POST" style={{ display: 'grid', gap: '1.5rem' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Request Description</label>
-          <textarea
-            name="description"
-            required
-            placeholder="e.g. Change the header color to blue..."
-            style={{
-              width: '100%',
-              minHeight: '120px',
-              padding: '0.75rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontFamily: 'inherit'
-            }}
-          />
+        <div className="bg-white p-8 rounded-2xl border border-emerald-100 shadow-sm">
+          <TicketForm />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Price (USD)</label>
-          <input
-            type="number"
-            name="price"
-            required
-            min="1"
-            step="0.01"
-            placeholder="35.00"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px'
-            }}
-          />
+        <div className="mt-8 text-center">
+          <a href="/dashboard" className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
+            &larr; Cancel and return to dashboard
+          </a>
         </div>
-
-        <button
-          type="submit"
-          style={{
-            backgroundColor: '#2563eb',
-            color: 'white',
-            padding: '0.75rem',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '1rem',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Create Ticket
-        </button>
-      </form>
-
-      <div style={{ marginTop: '2rem' }}>
-        <a href="/dashboard" style={{ color: '#6b7280', textDecoration: 'none' }}>&larr; Cancel and return to dashboard</a>
       </div>
-    </div>
+    </main>
   );
 }
