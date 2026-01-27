@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 const MAX_ASSET_BYTES = 1_000_000; // ~1MB cap. Tune. Prevents DB bloat.
+let currentScreenshotFile = null;
 
 function dollarsToCents(v) {
   // v is string/number; return int cents
@@ -28,6 +29,78 @@ function setMsg(kind, text) {
   el.textContent = text;
 }
 
+// UI: Handle Screenshot Preview
+function updateScreenshotPreview() {
+  const empty = $('upload-empty');
+  const preview = $('upload-preview');
+  const img = $('preview-img');
+
+  if (currentScreenshotFile) {
+    fileToDataUrl(currentScreenshotFile).then(url => {
+      img.src = url;
+      empty.style.display = 'none';
+      preview.style.display = 'block';
+    }).catch(e => {
+      console.error('Preview error', e);
+      setMsg('err', 'Failed to read image');
+    });
+  } else {
+    img.src = '';
+    preview.style.display = 'none';
+    empty.style.display = 'block';
+  }
+}
+
+// Listeners for Upload
+const uploadZone = $('upload-zone');
+const fileInput = $('shot');
+const removeBtn = $('remove-shot');
+
+if (uploadZone) {
+  // Click -> Open File Dialog
+  uploadZone.addEventListener('click', (e) => {
+    // Find if click wasn't on the remove button
+    if (e.target.closest('#remove-shot')) return;
+    fileInput.click();
+  });
+}
+
+if (fileInput) {
+  fileInput.addEventListener('change', (e) => {
+    if (fileInput.files && fileInput.files[0]) {
+      currentScreenshotFile = fileInput.files[0];
+      updateScreenshotPreview();
+    }
+  });
+}
+
+if (removeBtn) {
+  removeBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent triggering upload
+    currentScreenshotFile = null;
+    fileInput.value = ''; // clear input
+    updateScreenshotPreview();
+  });
+}
+
+// Paste Listener
+document.addEventListener('paste', (e) => {
+  if (!e.clipboardData) return;
+  const items = e.clipboardData.items;
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const blob = items[i].getAsFile();
+      if (blob) {
+        currentScreenshotFile = blob;
+        updateScreenshotPreview();
+      }
+      break;
+    }
+  }
+});
+
+
 async function buildPayload() {
   const text = $('text').value;
   if (!nonEmptyText(text)) throw new Error('EVIDENCE_TEXT_REQUIRED');
@@ -39,7 +112,8 @@ async function buildPayload() {
   const priceCents = dollarsToCents($('price').value);
 
   let assetUrl = null;
-  const f = $('shot').files && $('shot').files[0];
+  // Use our tracked file variable tracking both paste and upload
+  const f = currentScreenshotFile;
   if (f) {
     if (f.size > MAX_ASSET_BYTES) throw new Error('SCREENSHOT_TOO_LARGE');
     assetUrl = await fileToDataUrl(f); // data:... base64
@@ -92,16 +166,18 @@ async function createTicket() {
     }
 
     const dollars = (payload.pricing.priceCents / 100).toFixed(2);
-    setMsg(
-      'ok',
-      `No worries, it will be ${payload.pricing.currency} ${dollars}.`
-    );
 
-    // Optional: open the public ticket page
+    // Show success view instead of opening tab
     if (res.shareUrl) {
-      // open in new tab without blocking
-      chrome.tabs.create({ url: res.shareUrl });
+      showSuccess(res.shareUrl);
     }
+
+    // Reset form after success
+    $('text').value = '';
+    $('price').value = '';
+    currentScreenshotFile = null;
+    updateScreenshotPreview();
+
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'UNKNOWN_ERROR';
     setMsg('err', msg);
@@ -121,8 +197,8 @@ const viewMain = $('view-main');
 const signinBtn = $('signin-btn');
 
 function showView(viewId) {
-  [viewLoading, viewSignin, viewMain].forEach((el) => {
-    el.style.display = el.id === viewId ? 'block' : 'none';
+  [viewLoading, viewSignin, viewMain, viewSuccess].forEach((el) => {
+    if (el) el.style.display = el.id === viewId ? 'block' : 'none';
   });
 }
 
@@ -142,11 +218,56 @@ async function checkAuth() {
 }
 
 signinBtn.addEventListener('click', () => {
-  // Open sign in page
-  chrome.tabs.create({ url: 'http://localhost:3000/sign-in' });
+  // Open the handoff page with our extension ID
+  const extId = chrome.runtime.id;
+  chrome.tabs.create({ url: `http://localhost:3000/extension/connect?ext_id=${extId}` });
 });
 
 // Boot
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkAuth();
+
+  // Check for draft
+  try {
+    const { draft_ticket } = await chrome.storage.local.get(['draft_ticket']);
+    if (draft_ticket && draft_ticket.text) {
+      $('text').value = draft_ticket.text;
+      // Clear it so it doesn't persist
+      await chrome.storage.local.remove('draft_ticket');
+    }
+  } catch (e) {
+    console.error('Draft load error', e);
+  }
 });
+
+// Success Flow
+const viewSuccess = $('view-success');
+const shareInput = $('share-link');
+const copyBtn = $('copy-link-btn');
+const resetBtn = $('reset-btn');
+
+function showSuccess(url) {
+  shareInput.value = url;
+  showView('view-success');
+}
+
+if (copyBtn) {
+  copyBtn.addEventListener('click', () => {
+    shareInput.select();
+    navigator.clipboard.writeText(shareInput.value).then(() => {
+      // Visual feedback
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 1000);
+    });
+  });
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    showView('view-main');
+    setMsg('', ''); // Clear any old messages
+  });
+}

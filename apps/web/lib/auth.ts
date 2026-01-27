@@ -3,10 +3,11 @@ import { userRepo } from '@scopeshield/db';
 import { redirect } from 'next/navigation';
 
 export async function getCurrentUser() {
-  const { userId } = await auth();
+  const { userId, debug } = await auth();
+  console.log('[Auth] getCurrentUser userId:', userId);
 
   if (!userId) {
-    redirect('/sign-in'); // Redirect to Clerk login
+    return null;
   }
 
   // Check if user exists in our DB
@@ -18,8 +19,7 @@ export async function getCurrentUser() {
     const clerkUser = await currentUser();
 
     if (!clerkUser) {
-      // Should theoretically not happen if auth() returned a userId
-      redirect('/sign-in');
+      return null; // Should not happen
     }
 
     const email = clerkUser.emailAddresses[0]?.emailAddress ?? 'no-email@clerk.user';

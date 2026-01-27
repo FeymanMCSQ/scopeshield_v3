@@ -81,20 +81,13 @@
       evidenceUrl: evidence.evidenceUrl,
     };
 
-    chrome.runtime.sendMessage({ type: 'SS_CREATE_TICKET', payload }, (resp) => {
+    chrome.runtime.sendMessage({ type: 'SS_OPEN_DRAFT', payload }, (resp) => {
       if (chrome.runtime.lastError) {
         console.log(`${SS.TAG} API error`, chrome.runtime.lastError.message);
         return;
       }
-
-      if (!resp?.ok) {
-        console.log(`${SS.TAG} create failed`, resp);
-        return;
-      }
-
-      console.log(`${SS.TAG} ticket created`, resp);
-      // Open share url in a new tab
-      window.open(resp.shareUrl, '_blank', 'noopener,noreferrer');
+      // Draft opened, nothing else to do here.
+      console.log(`${SS.TAG} Draft opened`);
     });
   });
 

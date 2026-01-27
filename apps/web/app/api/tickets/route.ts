@@ -39,6 +39,11 @@ export async function POST(req: Request) {
     const status = (e as { status?: number })?.status === 401 ? 401 : 400;
     const message = e instanceof Error ? e.message : 'BAD_REQUEST';
 
+    console.error('API Error:', message);
+    if (status === 400) {
+      console.error('Validation Warning or Bad Request:', e);
+    }
+
     return NextResponse.json({ ok: false, error: message }, { status });
   }
 }

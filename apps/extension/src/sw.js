@@ -1,89 +1,154 @@
 // apps/extension/src/sw.js
 
-const API_ORIGIN = 'http://localhost:3000'; // dev only; later replace with prod domain
+const API_ORIGIN = 'http://localhost:3000';
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!msg || msg.type !== 'SS_CREATE_TICKET') return;
+// Helper to get token
+async function getAuthToken() {
+  try {
+    const { session } = await chrome.storage.local.get(['session']);
+    return session?.token || null;
+  } catch (err) {
+    console.error('Error reading token:', err);
+    return null;
+  }
+}
 
-  (async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/api/tickets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // sends ss_session cookie for API_ORIGIN
-        body: JSON.stringify(msg.payload),
+// 1. Listen for Handshake from Web App
+chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === 'SS_HANDSHAKE') {
+    const { token, user } = msg;
+    if (token && user) {
+      chrome.storage.local.set({
+        session: {
+          token,
+          user,
+          timestamp: Date.now()
+        }
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('Storage error:', chrome.runtime.lastError);
+          sendResponse({ ok: false, error: 'STORAGE_ERROR' });
+        } else {
+          sendResponse({ ok: true });
+        }
       });
+    } else {
+      sendResponse({ ok: false, error: 'Invalid payload' });
+    }
+    return true; // async
+  }
+});
 
-      const contentType = res.headers.get('content-type') || '';
-      const isJson = contentType.includes('application/json');
+// 2. Main Message Listener (Popup -> SW)
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg) return;
 
-      const data = isJson
-        ? await res.json().catch(() => ({ ok: false, error: 'BAD_JSON' }))
-        : { ok: false, error: await res.text().catch(() => 'NON_JSON_ERROR') };
+  switch (msg.type) {
+    case 'SS_CHECK_AUTH':
+      handleCheckAuth(sendResponse);
+      return true; // Keep channel open
 
-      // Normalize error handling: either HTTP failure or { ok:false } from server
-      if (!res.ok || !data || data.ok !== true) {
-        sendResponse({
-          ok: false,
-          status: res.status,
-          error:
-            (data && data.error) || (data && data.message) || 'REQUEST_FAILED',
-        });
-        return;
-      }
+    case 'SS_CREATE_TICKET':
+      handleCreateTicket(msg.payload, sendResponse);
+      return true; // Keep channel open
 
-      // Normalize success shape defensively
-      const ticketId = data?.ticket?.id || data?.ticketId || null;
-      const shareUrl =
-        data?.shareUrl || (ticketId ? `${API_ORIGIN}/t/${ticketId}` : null);
+    case 'SS_OPEN_DRAFT':
+      handleOpenDraft(msg.payload, sendResponse);
+      return true;
 
-      if (!ticketId) {
-        sendResponse({
-          ok: false,
-          status: res.status,
-          error: 'MISSING_TICKET_ID',
-        });
-        return;
-      }
+    default:
+      // Unknown message
+      return false;
+  }
+});
 
-      sendResponse({
-        ok: true,
-        ticketId,
-        shareUrl,
-      });
-    } catch (e) {
+async function handleCheckAuth(sendResponse) {
+  try {
+    const { session } = await chrome.storage.local.get(['session']);
+    // Verify structure
+    if (session && session.user && session.token) {
+      sendResponse({ ok: true, user: session.user });
+    } else {
+      sendResponse({ ok: false });
+    }
+  } catch (err) {
+    console.error('Auth check error:', err);
+    sendResponse({ ok: false, error: err.message });
+  }
+}
+
+async function handleCreateTicket(payload, sendResponse) {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      return sendResponse({ ok: false, error: 'UNAUTHORIZED' });
+    }
+
+    const res = await fetch(`${API_ORIGIN}/api/tickets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.status === 401) {
+      // Token expired or invalid
+      await chrome.storage.local.remove('session');
+      return sendResponse({ ok: false, error: 'UNAUTHORIZED' });
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+
+    const data = isJson
+      ? await res.json().catch(() => ({ ok: false, error: 'BAD_JSON' }))
+      : { ok: false, error: await res.text().catch(() => 'NON_JSON_ERROR') };
+
+    if (!res.ok || !data || data.ok !== true) {
       sendResponse({
         ok: false,
-        error: e instanceof Error ? e.message : String(e),
+        status: res.status,
+        error: (data && data.error) || (data && data.message) || 'REQUEST_FAILED',
       });
+      return;
     }
-  })();
 
-  return true; // async response
-});
+    const ticketId = data?.ticket?.id || data?.ticketId || null;
+    const shareUrl = data?.shareUrl || (ticketId ? `${API_ORIGIN}/t/${ticketId}` : null);
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!msg || msg.type !== 'SS_CHECK_AUTH') return;
+    if (!ticketId) {
+      sendResponse({ ok: false, status: res.status, error: 'MISSING_TICKET_ID' });
+      return;
+    }
 
-  (async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/api/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      // api/auth/me returns 401 if not logged in, 200 if logged in
-      const data = await res.json().catch(() => null);
+    sendResponse({ ok: true, ticketId, shareUrl });
 
-      if (res.ok && data?.ok) {
-        sendResponse({ ok: true, user: data.user });
+  } catch (e) {
+    console.error('Create ticket error:', e);
+    sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+async function handleOpenDraft(payload, sendResponse) {
+  try {
+    await chrome.storage.local.set({ draft_ticket: payload });
+    // Create popup window
+    chrome.windows.create({
+      url: 'popup.html',
+      type: 'popup',
+      width: 360,
+      height: 600
+    }, (win) => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
       } else {
-        // 401 or other error
-        sendResponse({ ok: false });
+        sendResponse({ ok: true });
       }
-    } catch (e) {
-      sendResponse({ ok: false, error: String(e) });
-    }
-  })();
-
-  return true; // async response
-});
+    });
+  } catch (e) {
+    console.error('Draft error:', e);
+    sendResponse({ ok: false, error: e.message });
+  }
+}
