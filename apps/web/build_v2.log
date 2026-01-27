@@ -1,0 +1,73 @@
+
+> web@0.1.0 build /home/safi/Desktop/WebDev/scopeshield_v3/apps/web
+> next build
+
+[dotenv@17.2.3] injecting env (10) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+▲ Next.js 16.1.1 (Turbopack)
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+✓ Compiled successfully in 7.2s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+  Generating static pages using 15 workers (0/21) ...
+  Generating static pages using 15 workers (5/21) 
+  Generating static pages using 15 workers (10/21) 
+[dotenv@17.2.3] injecting env (0) from ../../.env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+  Generating static pages using 15 workers (15/21) 
+✓ Generating static pages using 15 workers (21/21) in 906.0ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/auth/me
+├ ƒ /api/dashboard
+├ ƒ /api/dashboard/tickets/create
+├ ƒ /api/public/checkout/[ticketId]
+├ ƒ /api/public/tickets/[ticketId]
+├ ƒ /api/stripe/checkout
+├ ƒ /api/stripe/onboard
+├ ƒ /api/stripe/portal
+├ ƒ /api/stripe/products/create
+├ ƒ /api/stripe/subscribe
+├ ƒ /api/stripe/subscription-webhook
+├ ƒ /api/stripe/v2-webhook
+├ ƒ /api/stripe/webhook
+├ ƒ /api/tickets
+├ ƒ /api/tickets/[ticketId]/approve
+├ ƒ /api/tickets/[ticketId]/checkout
+├ ƒ /connect-demo
+├ ƒ /connect-demo/store/[accountId]
+├ ƒ /connect-demo/success
+├ ƒ /dashboard
+├ ƒ /dashboard/new
+├ ƒ /extension/connect
+├ ƒ /sign-in/[[...sign-in]]
+├ ƒ /sign-up/[[...sign-up]]
+└ ƒ /t/[ticketId]
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+

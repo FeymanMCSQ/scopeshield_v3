@@ -1,6 +1,6 @@
 import { stripeClient, ensureStripeKey } from '@scopeshield/domain';
 import { userRepo } from '@scopeshield/db';
-import { validateSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
 export default async function ConnectDemoPage({
@@ -8,16 +8,12 @@ export default async function ConnectDemoPage({
 }: {
   searchParams: Promise<{ accountId?: string }>;
 }) {
-  const session = await validateSession();
-  if (!session) {
-    redirect('/login'); // Mock login path for this demo
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/sign-in'); // Redirect to Clerk login
   }
 
-  const { userId } = session;
-  const user = await userRepo.findUserById(userId);
-  if (!user) {
-    return <div>User not found.</div>;
-  }
+  const { id: userId } = user;
 
   const stripeAccountId = user.stripeAccountId;
   let accountInfo = null;
@@ -33,10 +29,10 @@ export default async function ConnectDemoPage({
       });
 
       readyToProcessPayments = account?.configuration?.merchant?.capabilities?.card_payments?.status === "active";
-      
+
       const requirementsStatus = account.requirements?.summary?.minimum_deadline?.status;
       onboardingComplete = requirementsStatus !== "currently_due" && requirementsStatus !== "past_due";
-      
+
       accountInfo = {
         id: account.id,
         displayName: account.display_name,
@@ -81,9 +77,9 @@ export default async function ConnectDemoPage({
           <p>Create products that will be stored on your connected account.</p>
           <ProductForm accountId={stripeAccountId} />
           <div style={{ marginTop: '1rem' }}>
-             <a href={`/connect-demo/store/${stripeAccountId}`} style={{ color: '#2563eb', textDecoration: 'underline' }}>
-               View your storefront
-             </a>
+            <a href={`/connect-demo/store/${stripeAccountId}`} style={{ color: '#2563eb', textDecoration: 'underline' }}>
+              View your storefront
+            </a>
           </div>
         </section>
       )}
@@ -108,13 +104,13 @@ function OnboardButton({ label = "Onboard to collect payments" }) {
   // Here we use a form to handle the POST request to our API.
   return (
     <form action="/api/stripe/onboard" method="POST">
-      <button type="submit" style={{ 
-        backgroundColor: '#6366f1', 
-        color: 'white', 
-        padding: '0.5rem 1rem', 
-        border: 'none', 
-        borderRadius: '4px', 
-        cursor: 'pointer' 
+      <button type="submit" style={{
+        backgroundColor: '#6366f1',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
       }}>
         {label}
       </button>
@@ -129,13 +125,13 @@ function ProductForm({ accountId }: { accountId: string }) {
       <input name="name" placeholder="Product Name" required style={{ padding: '0.5rem' }} />
       <textarea name="description" placeholder="Description" style={{ padding: '0.5rem' }} />
       <input name="price" type="number" placeholder="Price (USD)" required style={{ padding: '0.5rem' }} />
-      <button type="submit" style={{ 
-        backgroundColor: '#059669', 
-        color: 'white', 
-        padding: '0.5rem 1rem', 
-        border: 'none', 
-        borderRadius: '4px', 
-        cursor: 'pointer' 
+      <button type="submit" style={{
+        backgroundColor: '#059669',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
       }}>
         Create Product
       </button>
@@ -146,13 +142,13 @@ function ProductForm({ accountId }: { accountId: string }) {
 function SubscribeButton() {
   return (
     <form action="/api/stripe/subscribe" method="POST">
-      <button type="submit" style={{ 
-        backgroundColor: '#2563eb', 
-        color: 'white', 
-        padding: '0.5rem 1rem', 
-        border: 'none', 
-        borderRadius: '4px', 
-        cursor: 'pointer' 
+      <button type="submit" style={{
+        backgroundColor: '#2563eb',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
       }}>
         Subscribe to Platform
       </button>
@@ -164,13 +160,13 @@ function PortalButton({ accountId }: { accountId: string }) {
   return (
     <form action="/api/stripe/portal" method="POST">
       <input type="hidden" name="accountId" value={accountId} />
-      <button type="submit" style={{ 
-        backgroundColor: '#4b5563', 
-        color: 'white', 
-        padding: '0.5rem 1rem', 
-        border: 'none', 
-        borderRadius: '4px', 
-        cursor: 'pointer' 
+      <button type="submit" style={{
+        backgroundColor: '#4b5563',
+        color: 'white',
+        padding: '0.5rem 1rem',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer'
       }}>
         Manage Subscription (Portal)
       </button>

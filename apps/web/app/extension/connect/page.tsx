@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-export default function ExtensionConnectPage() {
+import { Suspense } from 'react';
+
+function ExtensionConnectContent() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
     const { user } = useUser();
     const searchParams = useSearchParams();
@@ -129,5 +131,17 @@ export default function ExtensionConnectPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function ExtensionConnectPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <Loader2 className="h-12 w-12 text-emerald-600 animate-spin" />
+            </div>
+        }>
+            <ExtensionConnectContent />
+        </Suspense>
     );
 }
