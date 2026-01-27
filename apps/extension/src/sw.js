@@ -1,6 +1,8 @@
 // apps/extension/src/sw.js
 
-const API_ORIGIN = 'http://localhost:3000';
+importScripts('config.js');
+
+const API_ORIGIN = getApiUrl();
 
 // Helper to get token
 async function getAuthToken() {

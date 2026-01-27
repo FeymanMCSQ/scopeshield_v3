@@ -9,11 +9,13 @@
   "host_permissions": [
     "https://web.whatsapp.com/*",
     "https://*.slack.com/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "https://scopeshield-v3-web.vercel.app/*"
   ],
   "externally_connectable": {
     "matches": [
-      "http://localhost:3000/*"
+      "http://localhost:3000/*",
+      "https://scopeshield-v3-web.vercel.app/*"
     ]
   },
   "action": {

@@ -220,7 +220,7 @@ async function checkAuth() {
 signinBtn.addEventListener('click', () => {
   // Open the handoff page with our extension ID
   const extId = chrome.runtime.id;
-  chrome.tabs.create({ url: `http://localhost:3000/extension/connect?ext_id=${extId}` });
+  chrome.tabs.create({ url: `${getApiUrl()}/extension/connect?ext_id=${extId}` });
 });
 
 // Boot
