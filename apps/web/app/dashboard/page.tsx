@@ -57,14 +57,23 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const tStart = Date.now();
+  console.log('[Dashboard] Page load started');
+
   const sp = await searchParams;
   const session = await getCurrentUser();
+
+  const tSession = Date.now();
+  console.log(`[Dashboard] Session fetch took ${tSession - tStart}ms`);
 
   if (!session) return null;
 
   const limit = clampLimit(sp.limit);
   const status = normalizeStatus(sp.status);
   const cursor = sp.cursor;
+
+  console.log('[Dashboard] Starting data fetch...');
+  const tDataStart = Date.now();
 
   const [ticketData, revenue] = await Promise.all([
     listTicketsForOwner({
@@ -75,6 +84,10 @@ export default async function DashboardPage({
     }),
     getRecapturedRevenueMetrics({ ownerUserId: session.id }),
   ]);
+
+  const tDataEnd = Date.now();
+  console.log(`[Dashboard] Data fetch (Promise.all) took ${tDataEnd - tDataStart}ms`);
+  console.log(`[Dashboard] Total server time: ${tDataEnd - tStart}ms`);
 
   const { items, nextCursor } = ticketData;
   const stripeConnected = !!session?.stripeAccountId;

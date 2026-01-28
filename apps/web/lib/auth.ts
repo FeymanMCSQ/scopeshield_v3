@@ -3,8 +3,12 @@ import { userRepo } from '@scopeshield/db';
 import { redirect } from 'next/navigation';
 
 export async function getCurrentUser() {
+  const start = Date.now();
+  console.log('[Auth] getCurrentUser started');
+
   const { userId, debug } = await auth();
-  console.log('[Auth] getCurrentUser userId:', userId);
+  const tAuth = Date.now();
+  console.log(`[Auth] Clerk auth() took ${tAuth - start}ms. UserId: ${userId}`);
 
   if (!userId) {
     return null;
@@ -12,11 +16,18 @@ export async function getCurrentUser() {
 
   // Check if user exists in our DB
   let dbUser = await userRepo.findUserById(userId);
+  const tFind = Date.now();
+  console.log(`[Auth] userRepo.findUserById took ${tFind - tAuth}ms`);
 
   if (!dbUser) {
+    console.log('[Auth] User not in DB, starting sync...');
+    const tSyncStart = Date.now();
+
     // Lazy Sync: Create user if missing
     // We need more details from Clerk to create the user properly (like email)
     const clerkUser = await currentUser();
+    const tCurrentUser = Date.now();
+    console.log(`[Auth] Clerk currentUser() took ${tCurrentUser - tSyncStart}ms`);
 
     if (!clerkUser) {
       return null; // Should not happen
@@ -25,23 +36,12 @@ export async function getCurrentUser() {
     const email = clerkUser.emailAddresses[0]?.emailAddress ?? 'no-email@clerk.user';
     const name = `${clerkUser.firstName} ${clerkUser.lastName}`.trim();
 
-    // We can't use 'createUserWithPassword' or 'upsertDevUser' exactly as is because
-    // we want to force the ID to match Clerk's ID.
-    // So we'll need to extend userRepo slightly or use prisma directly here if repo allows.
-    // For now, let's assume we update userRepo to support creating with explicit ID.
-    // OR we use upsert with the ID. 
-
-    // Let's modify userRepo to allow creating with a specific ID, 
-    // or just use a new method 'syncClerkUser'.
-
-    // For this step, I'll assume we'll add 'syncClerkUser' to userRepo next or just use a workaround.
-    // I will use a direct prisma call in a separate file or just wait to update userRepo.
-    // Actually, let's return null here and handle the sync in the repo update step easier.
-
-    // But to keep this file compiling, let's assume `syncClerkUser` exists.
     dbUser = await userRepo.syncClerkUser(userId, email, name);
+    const tSyncEnd = Date.now();
+    console.log(`[Auth] userRepo.syncClerkUser took ${tSyncEnd - tCurrentUser}ms`);
   }
 
+  console.log(`[Auth] getCurrentUser total took ${Date.now() - start}ms`);
   return dbUser;
 }
 
