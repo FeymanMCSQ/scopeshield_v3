@@ -66,7 +66,7 @@ export default async function DashboardPage({
   const status = normalizeStatus(sp.status);
   const cursor = sp.cursor;
 
-  const [ticketData, revenue, user] = await Promise.all([
+  const [ticketData, revenue] = await Promise.all([
     listTicketsForOwner({
       ownerUserId: session.id,
       limit,
@@ -74,11 +74,10 @@ export default async function DashboardPage({
       status: status === 'all' ? undefined : (status as tickets.TicketStatus),
     }),
     getRecapturedRevenueMetrics({ ownerUserId: session.id }),
-    userRepo.findUserById(session.id),
   ]);
 
   const { items, nextCursor } = ticketData;
-  const stripeConnected = !!user?.stripeAccountId;
+  const stripeConnected = !!session?.stripeAccountId;
 
   // Build query helper
   const baseQuery = (overrides: Partial<SearchParams> = {}) => {
@@ -157,8 +156,8 @@ export default async function DashboardPage({
                 key={s}
                 href={baseQuery({ status: s, cursor: undefined })}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${active
-                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/10'
-                    : 'bg-white text-emerald-900/60 hover:bg-emerald-50 border border-transparent hover:border-emerald-100'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/10'
+                  : 'bg-white text-emerald-900/60 hover:bg-emerald-50 border border-transparent hover:border-emerald-100'
                   }`}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -194,9 +193,9 @@ export default async function DashboardPage({
                     <tr key={t.id} className="hover:bg-emerald-50/30 transition-colors group">
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${t.status === 'paid' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-                            t.status === 'approved' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              t.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                                'bg-gray-100 text-gray-600 border-gray-200'
+                          t.status === 'approved' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            t.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                              'bg-gray-100 text-gray-600 border-gray-200'
                           }`}>
                           {t.status}
                         </span>
@@ -238,8 +237,8 @@ export default async function DashboardPage({
                   key={n}
                   href={baseQuery({ limit: String(n), cursor: undefined })}
                   className={`px-2 py-1 rounded text-xs transition-colors ${n === limit
-                      ? 'bg-emerald-100 text-emerald-800 font-medium'
-                      : 'text-emerald-900/40 hover:bg-emerald-50'
+                    ? 'bg-emerald-100 text-emerald-800 font-medium'
+                    : 'text-emerald-900/40 hover:bg-emerald-50'
                     }`}
                 >
                   {n}
