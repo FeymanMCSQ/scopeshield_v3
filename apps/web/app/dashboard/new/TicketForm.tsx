@@ -70,7 +70,7 @@ export function TicketForm() {
                         type="number"
                         name="price"
                         required
-                        min="1"
+                        min="0.50"
                         step="0.01"
                         placeholder="35.00"
                         className="w-full pl-7 p-3 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white placeholder:text-gray-400"

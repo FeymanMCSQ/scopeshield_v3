@@ -5,7 +5,7 @@ import { stripe } from '@/lib/stripe';
 import { getCurrentUser } from '@/lib/auth';
 
 // Adjust these imports to match your actual db exports
-import { ticketRepo } from '@scopeshield/db'; // or wherever your repo is exported from
+import { ticketRepo, userRepo } from '@scopeshield/db'; // or wherever your repo is exported from
 
 import { billing } from '@scopeshield/domain';
 
@@ -50,7 +50,16 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  // 4) Stripe session creation (server-side only)
+  // 4) Fetch Owner's Stripe Account ID for Payouts
+  const owner = await userRepo.findUserById(ticket.ownerUserId);
+  if (!owner?.stripeAccountId) {
+    return NextResponse.json(
+      { error: 'OwnerStripeAccountMissing', message: 'The freelancer has not connected their Stripe account.' },
+      { status: 400 }
+    );
+  }
+
+  // 5) Stripe session creation (Direct Charge with Transfer)
   const stripeSession = await stripe.checkout.sessions.create({
     mode: 'payment',
 
@@ -71,6 +80,12 @@ export async function POST(
         quantity: 1,
       },
     ],
+
+    payment_intent_data: {
+      transfer_data: {
+        destination: owner.stripeAccountId,
+      },
+    },
 
     // Use placeholders per Stripe docs
     success_url: `${baseUrl}/pay/success?session_id={CHECKOUT_SESSION_ID}`,

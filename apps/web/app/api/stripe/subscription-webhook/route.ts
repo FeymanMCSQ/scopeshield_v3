@@ -11,7 +11,7 @@ import { userRepo } from '@scopeshield/db';
 export async function POST(req: Request) {
   const payload = await req.text();
   const sig = req.headers.get('stripe-signature');
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = process.env.STRIPE_SUBSCRIPTION_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
     return NextResponse.json({ error: 'Missing signature or webhook secret' }, { status: 400 });
