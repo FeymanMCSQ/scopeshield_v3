@@ -27,21 +27,28 @@ export async function POST(req: Request) {
 
     // 1. Create Connected Account if it doesn't exist
     if (!accountId) {
+      const { country } = await req.json().catch(() => ({ country: 'US' })); // Default fallback if direct call
+
       /**
        * Creating Connected Accounts using the V2 API.
        * We follow the provided properties strictly.
        */
       const account = await stripeClient.v2.core.accounts.create({
+        country: country || 'US',
         display_name: user.name || user.email,
         contact_email: user.email,
-        configuration: {
-          merchant: {},
-          customer: {},
-        },
-        // defaults: { ... } removed to avoid "not a merchant" error.
-        // We let the onboarding flow settle these details.
 
-      });
+        // NOW we can set these because we have a country!
+        controller: {
+          fees: { payer: 'application' },
+          losses: { payments: 'application' },
+          stripe_dashboard: { type: 'express' },
+        },
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      } as any);
 
       accountId = account.id;
 

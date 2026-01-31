@@ -118,11 +118,12 @@ export default async function DashboardPage({
 
           <div className="flex items-center gap-4">
             {!stripeConnected ? (
-              <form action="/api/stripe/onboard" method="POST">
-                <button type="submit" className="flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-sm font-medium">
-                  <CreditCard className="w-4 h-4 mr-2" /> Connect Stripe
-                </button>
-              </form>
+              <Link
+                href="/dashboard/connect"
+                className="flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-sm font-medium"
+              >
+                <CreditCard className="w-4 h-4 mr-2" /> Connect Stripe
+              </Link>
             ) : (
               <>
                 <div className="hidden md:flex items-center px-3 py-1 bg-emerald-100/50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-200/50">
