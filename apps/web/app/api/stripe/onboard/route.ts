@@ -19,9 +19,6 @@ export async function POST(req: Request) {
     }
 
     const userId = user.id;
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
 
     let accountId = user.stripeAccountId;
 
@@ -30,25 +27,25 @@ export async function POST(req: Request) {
       const { country } = await req.json().catch(() => ({ country: 'US' })); // Default fallback if direct call
 
       /**
-       * Creating Connected Accounts using the V2 API.
-       * We follow the provided properties strictly.
+       * Creating Connected Accounts using the Classic (V1) API.
+       * This is more stable for Express accounts across regions.
        */
-      const account = await stripeClient.v2.core.accounts.create({
+      const account = await stripeClient.accounts.create({
+        type: 'express',
         country: country || 'US',
-        display_name: user.name || user.email,
-        contact_email: user.email,
-
-        // NOW we can set these because we have a country!
-        controller: {
-          fees: { payer: 'application' },
-          losses: { payments: 'application' },
-          stripe_dashboard: { type: 'express' },
-        },
+        email: user.email,
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-      } as any);
+        settings: {
+          payouts: {
+            schedule: {
+              interval: 'manual',
+            },
+          },
+        },
+      });
 
       accountId = account.id;
 
@@ -57,20 +54,12 @@ export async function POST(req: Request) {
     }
 
     // 2. Generate Account Link for onboarding
-    /**
-     * Use the V2 account links API to create an account link.
-     */
     const origin = new URL(req.url).origin;
-    const accountLink = await stripeClient.v2.core.accountLinks.create({
+    const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
-      use_case: {
-        type: 'account_onboarding',
-        account_onboarding: {
-          configurations: ['merchant', 'customer'],
-          refresh_url: `${origin}/connect-demo`,
-          return_url: `${origin}/connect-demo?accountId=${accountId}`,
-        },
-      },
+      refresh_url: `${origin}/connect-demo`,
+      return_url: `${origin}/connect-demo?accountId=${accountId}`,
+      type: 'account_onboarding',
     });
 
     return NextResponse.json({ url: accountLink.url });
