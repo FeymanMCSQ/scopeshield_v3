@@ -27,25 +27,22 @@ export async function POST(req: Request) {
       const { country } = await req.json().catch(() => ({ country: 'US' })); // Default fallback if direct call
 
       /**
-       * Creating Connected Accounts using the Classic (V1) API.
-       * This is more stable for Express accounts across regions.
+       * Creating Connected Accounts using the Modern V2 Configuration.
+       * We use 'controller' to define platform behavior (fees, losses, dashboard).
        */
       const account = await stripeClient.accounts.create({
-        type: 'express',
         country: country || 'US',
         email: user.email,
+        controller: {
+          fees: { payer: 'application' },
+          losses: { payments: 'application' },
+          stripe_dashboard: { type: 'express' },
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        settings: {
-          payouts: {
-            schedule: {
-              interval: 'manual',
-            },
-          },
-        },
-      });
+      } as any);
 
       accountId = account.id;
 
