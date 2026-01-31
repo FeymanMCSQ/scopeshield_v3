@@ -15,3 +15,4 @@ export type {
 
 export { userRepo } from './userRepo';
 export { sessionRepo } from './sessionRepo';
+export { adminRepo } from './adminRepo';
