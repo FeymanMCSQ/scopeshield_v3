@@ -28,6 +28,7 @@ model User {
 
   sessions  Session[]
   tickets   Ticket[]
+  feedbacks Feedback[]
 }
 
 model Session {
@@ -79,4 +80,15 @@ model Ticket {
 
   @@index([ownerUserId, createdAt])
   @@index([status, createdAt])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  type      String   @default("feedback") // 'feedback' | 'complaint' | 'other'
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

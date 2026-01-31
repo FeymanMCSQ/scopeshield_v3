@@ -268,6 +268,13 @@ export default async function DashboardPage({
           </div>
         </div>
       </div>
+
+      {/* Footer / Feedback Link */}
+      <div className="max-w-6xl mx-auto px-6 mt-12 mb-8 text-center">
+        <Link href="/feedback" className="text-sm text-emerald-900/40 hover:text-emerald-600 transition-colors">
+          Give Feedback
+        </Link>
+      </div>
     </main>
   );
 }
