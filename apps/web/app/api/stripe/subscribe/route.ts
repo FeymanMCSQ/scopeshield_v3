@@ -31,11 +31,14 @@ export async function POST(req: Request) {
       mode: 'subscription',
       line_items: [
         {
-          // Placeholder Price ID. In a real app, this would be from process.env or a DB.
-          price: process.env.STRIPE_PRICE_ID || 'price_placeholder_id',
+          price: process.env.STRIPE_PRICE_ID,
           quantity: 1
         },
       ],
+      subscription_data: {
+        // No Stripe trial, because we give an implicit 14-day trial in the app before blocking.
+        // When they pay here, it starts billing immediately.
+      },
       success_url: `${origin}/connect-demo/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/connect-demo`,
     });

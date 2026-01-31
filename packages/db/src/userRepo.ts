@@ -18,6 +18,7 @@ export const userRepo = {
         stripeAccountId: true,
         subscriptionStatus: true,
         passwordHash: true, // Only for internal checks if needed, usually excluded from public DTOs
+        createdAt: true,
       },
     });
   },
@@ -65,7 +66,8 @@ export const userRepo = {
         name: true,
         stripeAccountId: true,
         subscriptionStatus: true,
-        passwordHash: true
+        passwordHash: true,
+        createdAt: true
       },
     });
   },
