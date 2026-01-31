@@ -41,16 +41,7 @@ export async function POST(req: Request) {
             losses_collector: 'stripe',
           },
         },
-        configuration: {
-          customer: {},
-          merchant: {
-            capabilities: {
-              card_payments: {
-                requested: true,
-              },
-            },
-          },
-        },
+
       });
 
       accountId = account.id;
