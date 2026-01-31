@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Navbar } from '@/components/Navbar';
+// Navbar is handled by the root layout
 import { Check, Send } from 'lucide-react';
 import Link from 'next/link';
 
@@ -70,8 +70,7 @@ export default function FeedbackPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Assuming Navbar wraps this layout or is global, if not adding here for safety */}
-            <div className="hidden"><Navbar /></div>
+
 
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <div className="mb-8">
