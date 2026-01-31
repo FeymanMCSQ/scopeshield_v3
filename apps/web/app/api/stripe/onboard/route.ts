@@ -34,6 +34,10 @@ export async function POST(req: Request) {
       const account = await stripeClient.v2.core.accounts.create({
         display_name: user.name || user.email,
         contact_email: user.email,
+        configuration: {
+          merchant: {},
+          customer: {},
+        },
         // defaults: { ... } removed to avoid "not a merchant" error.
         // We let the onboarding flow settle these details.
 
