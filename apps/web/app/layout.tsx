@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Scopeshield",
   description: "Secure payments for your services.",
+  icons: {
+    icon: "/icons/32x32.png",
+    shortcut: "/icons/16x16.png",
+    apple: "/icons/128x128.png",
+  },
 };
 
 export default function RootLayout({
